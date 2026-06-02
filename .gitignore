@@ -1,0 +1,30 @@
+# ── Build output ───────────────────────────────────────────────
+build/
+out/
+bin/
+*.class
+
+# ── Gradle ─────────────────────────────────────────────────────
+.gradle/
+**/.gradle/
+
+# ── IDE ────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# ── Minecraft dev-run dirs (created by the loaders) ────────────
+run/
+**/run/
+
+# ── OS junk ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs & local secrets ───────────────────────────────────────
+*.log
+*.pfx
+cert.*

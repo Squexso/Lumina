@@ -1,0 +1,67 @@
+name: Release
+
+# Builds the launcher (.exe) + the three client mods and publishes a GitHub Release
+# whenever you push a version tag like v0.2.0. The Release assets (incl. latest.json)
+# are exactly what LuminaMC's built-in auto-updater reads.
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:   # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write       # needed to create the Release
+
+jobs:
+  build:
+    runs-on: windows-latest    # required so jpackage can produce a Windows .exe
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build client mods (Fabric / Forge / NeoForge)
+        working-directory: lumina-multiloader
+        run: ./gradlew build --no-daemon
+
+      - name: Package launcher (.exe) + update feed
+        working-directory: launcher
+        run: ./gradlew packageLauncher publishRelease --no-daemon
+
+      # ── OPTIONAL: code-sign the .exe (see docs/RELEASE.md). Needs two repo secrets:
+      #    WINDOWS_PFX_BASE64  – your .pfx certificate, base64-encoded
+      #    WINDOWS_PFX_PASSWORD – its password
+      # - name: Sign the installer
+      #   if: ${{ secrets.WINDOWS_PFX_BASE64 != '' }}
+      #   shell: pwsh
+      #   run: |
+      #     [IO.File]::WriteAllBytes("cert.pfx", [Convert]::FromBase64String($env:PFX))
+      #     $st = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Select-Object -Last 1).FullName
+      #     Get-ChildItem launcher\build\jpackage\*.exe | ForEach-Object {
+      #       & $st sign /fd SHA256 /f cert.pfx /p $env:PFXPW /tr http://timestamp.digicert.com /td SHA256 $_.FullName
+      #     }
+      #   env:
+      #     PFX:   ${{ secrets.WINDOWS_PFX_BASE64 }}
+      #     PFXPW: ${{ secrets.WINDOWS_PFX_PASSWORD }}
+
+      - name: Collect release artifacts
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp launcher/build/release/*            dist/ 2>/dev/null || true
+          cp launcher/build/jpackage/*.exe       dist/ 2>/dev/null || true
+          cp launcher/build/jpackage/*.msi       dist/ 2>/dev/null || true
+          cp lumina-multiloader/fabric/build/libs/lumina-fabric-*.jar     dist/ 2>/dev/null || true
+          cp lumina-multiloader/forge/build/libs/LuminaMC-forge-*.jar     dist/ 2>/dev/null || true
+          cp lumina-multiloader/neoforge/build/libs/lumina-neoforge-*.jar dist/ 2>/dev/null || true
+          ls -la dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

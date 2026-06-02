@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "lumina",
+  "version": "${version}",
+  "name": "Lumina",
+  "description": "who the fuck created fishing in skyblock?",
+  "authors": ["squexso"],
+  "contact": {},
+  "license": "CC0-1.0",
+  "icon": "assets/lumina/lumina.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.squxso.lumina.LuminaClient"
+    ]
+  },
+  "mixins": [
+    "lumina.mixins.json",
+    "lumina.sodium.mixins.json"
+  ],
+  "accessWidener": "lumina.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.17.3",
+    "minecraft": "1.21.10",
+    "fabric-api": "*"
+  }
+}

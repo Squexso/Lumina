@@ -1,0 +1,50 @@
+plugins {
+    id 'fabric-loom' version '1.13-SNAPSHOT'
+    id 'maven-publish'
+}
+
+version = project.findProperty("mod_version") ?: "1.1.8"
+group = "net.squxso.lumina"
+
+base {
+    archivesName = "lumina"
+}
+
+// Run ./gradlew bumpVersion before each release to increment the patch number.
+tasks.register("bumpVersion") {
+    doLast {
+        def propsFile = file("gradle.properties")
+        def content   = propsFile.text
+        def matcher   = content =~ /mod_version=(\d+)\.(\d+)\.(\d+)/
+        if (matcher.find()) {
+            def newPatch   = Integer.parseInt(matcher.group(3)) + 1
+            def newVersion = "${matcher.group(1)}.${matcher.group(2)}.${newPatch}"
+            propsFile.text = content.replaceFirst(
+                /mod_version=\d+\.\d+\.\d+/, "mod_version=${newVersion}")
+            println "Version bumped to ${newVersion}"
+        }
+    }
+}
+
+loom {
+    splitEnvironmentSourceSets()
+    accessWidenerPath = file("src/main/resources/lumina.accesswidener")
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:1.21.10"
+    mappings "net.fabricmc:yarn:1.21.10+build.2:v2"
+    modImplementation "net.fabricmc:fabric-loader:0.17.3"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:0.138.0+1.21.10"
+
+    // Sodium — compile-only so LuminaSodiumMixin can reference its classes.
+    // The jar is NOT bundled; players must have Sodium installed separately.
+    modCompileOnly files("C:/Users/lochd/AppData/Roaming/PrismLauncher/instances/1.21.10(2)/minecraft/mods/sodium-fabric-0.7.3+mc1.21.10.jar")
+}

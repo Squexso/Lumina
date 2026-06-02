@@ -1,0 +1,258 @@
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+group = 'com.luminamc'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+javafx {
+    version = '21.0.4'
+    modules = ['javafx.controls', 'javafx.graphics', 'javafx.base', 'javafx.swing']
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    // WebP decoding for remote mod icons — Modrinth serves most project icons as
+    // .webp, which JavaFX's Image can't read. Registers a WebP ImageIO reader and
+    // bundles the native libwebp for Windows/macOS/Linux.
+    implementation 'com.github.usefulness:webp-imageio:0.10.0'
+
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+application {
+    // A non-Application launcher class avoids the
+    // "JavaFX runtime components are missing" error when run from the classpath.
+    mainClass = 'com.luminamc.Main'
+}
+
+jar {
+    // A stable, version-less name so the auto-updater always swaps the same file
+    // inside the installed app/ folder (the version lives in the manifest below).
+    archiveFileName = 'luminamc-launcher.jar'
+    manifest {
+        attributes(
+            'Implementation-Title':   'LuminaMC',
+            'Implementation-Version': project.version,
+            'Main-Class':             'com.luminamc.Main'
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Headless diagnostic for the launch pipeline.
+tasks.register('diag', JavaExec) {
+    group = 'verification'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.luminamc.Diag'
+}
+
+tasks.named('run') {
+    // Allow the game-launch subprocess and OAuth browser to work in dev runs.
+    systemProperty 'luminamc.dev', 'true'
+    // `./gradlew run -Psmoke` renders the UI, writes a marker, then exits — used for CI smoke tests.
+    if (project.hasProperty('smoke')) {
+        systemProperty 'luminamc.smoketest', 'true'
+    }
+}
+
+// ── Regenerates packaging/lumina.ico as a crisp MULTI-resolution icon
+// (256→16px) straight from the crystal renderer. Run: gradlew -p launcher genIcon
+tasks.register('genIcon', JavaExec) {
+    group = 'distribution'
+    description = 'Regenerates packaging/lumina.ico (multi-resolution) from the crystal renderer.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.luminamc.tools.IconGen'
+    args = ["${projectDir}/packaging/lumina.ico".toString()]
+}
+
+// ── Native packaging: produces a real LuminaMC.exe (app-image) whose taskbar
+// icon is the Lumina crystal. Run: gradlew -p launcher packageLauncher
+// Output: launcher/build/dist/LuminaMC/LuminaMC.exe
+tasks.register('packageLauncher') {
+    group = 'distribution'
+    description = 'Builds a native LuminaMC app image (LuminaMC.exe) with the Lumina icon.'
+    dependsOn 'jar', 'genIcon'
+    doLast {
+        def inputDir = layout.buildDirectory.dir('jpackage-input').get().asFile
+        def distDir  = layout.buildDirectory.dir('dist').get().asFile
+        delete inputDir, distDir
+        inputDir.mkdirs(); distDir.mkdirs()
+
+        // Gather the launcher jar + every runtime dependency (incl. JavaFX jars).
+        copy {
+            from configurations.runtimeClasspath
+            from tasks.jar.archiveFile
+            into inputDir
+        }
+
+        def jpackage = "${System.getProperty('java.home')}/bin/jpackage"
+        def args = [
+            '--type', 'app-image',
+            '--name', 'LuminaMC',
+            '--app-version', project.version.toString(),
+            '--vendor', 'LuminaMC',
+            '--input', inputDir.absolutePath,
+            '--main-jar', tasks.jar.archiveFileName.get(),
+            '--main-class', 'com.luminamc.Main',
+            '--icon', "${projectDir}/packaging/lumina.ico",
+            '--dest', distDir.absolutePath
+        ]
+        if (project.hasProperty('smokeExe')) {
+            args += ['--java-options', '-Dluminamc.smoketest=true']
+        }
+        exec { commandLine([jpackage] + args) }
+        println "Built ${distDir}/LuminaMC/LuminaMC.exe"
+    }
+}
+
+// ── One-click install: builds LuminaMC.exe, copies it to a stable location
+// under %LOCALAPPDATA%\Programs\LuminaMC, and drops a desktop shortcut you can
+// double-click and right-click → "Pin to taskbar".
+// Run: gradlew -p launcher installApp
+tasks.register('installApp') {
+    group = 'distribution'
+    description = 'Installs LuminaMC and creates a desktop shortcut (Windows).'
+    dependsOn 'packageLauncher'
+    doLast {
+        def appImage = layout.buildDirectory.dir('dist/LuminaMC').get().asFile
+        def localAppData = System.getenv('LOCALAPPDATA') ?: "${System.getProperty('user.home')}/AppData/Local"
+        def installDir = file("${localAppData}/Programs/LuminaMC")
+
+        // A previously-installed LuminaMC may be running and locking its files —
+        // stop it first so the reinstall can overwrite cleanly (no-op if not running).
+        exec {
+            ignoreExitValue = true
+            commandLine 'powershell', '-NoProfile', '-Command',
+                'Stop-Process -Name LuminaMC -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 600'
+        }
+
+        delete installDir
+        installDir.mkdirs()
+        copy {
+            from appImage
+            into installDir
+        }
+        def exe = new File(installDir, 'LuminaMC.exe').absolutePath
+        def work = installDir.absolutePath
+
+        // Create the desktop shortcut via WScript.Shell (the same COM API
+        // Windows itself uses), targeting the real (registry) Desktop folder.
+        def ps = """
+\$ws = New-Object -ComObject WScript.Shell
+\$desktop = [Environment]::GetFolderPath('Desktop')
+\$lnk = Join-Path \$desktop 'LuminaMC.lnk'
+\$s = \$ws.CreateShortcut(\$lnk)
+\$s.TargetPath = '${exe}'
+\$s.WorkingDirectory = '${work}'
+\$s.IconLocation = '${exe},0'
+\$s.Description = 'LuminaMC — Minecraft launcher'
+\$s.Save()
+Write-Output \$lnk
+""".toString()
+        exec { commandLine 'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps }
+
+        println ""
+        println "  LuminaMC installed → ${installDir}"
+        println "  Desktop shortcut created. Right-click it → 'Pin to taskbar' to keep it pinned."
+        println ""
+    }
+}
+
+// ── Auto-update publishing ──────────────────────────────────────────────
+// Stage a release (app jar + latest.json) into build/release for your update
+// server. Bump `version` above, then:  gradlew -p launcher publishRelease
+//   -PbaseUrl=http://your-host:8770   (URL the jar will be reachable at)
+//   -Pnotes="What changed"            (optional changelog shown to users)
+tasks.register('publishRelease') {
+    group = 'distribution'
+    description = 'Stages the app jar + latest.json into build/release for the update server.'
+    dependsOn 'jar'
+    doLast {
+        def releaseDir = layout.buildDirectory.dir('release').get().asFile
+        releaseDir.mkdirs()
+        def jarName = tasks.jar.archiveFileName.get()
+        copy { from tasks.jar.archiveFile; into releaseDir }
+
+        def baseUrl = (project.findProperty('baseUrl') ?: 'http://localhost:8770').toString().replaceAll('/+$', '')
+        def notes   = (project.findProperty('notes') ?: '').toString()
+
+        def md = java.security.MessageDigest.getInstance('SHA-1')
+        new File(releaseDir, jarName).eachByte(1 << 16) { buf, n -> md.update(buf, 0, n) }
+        def sha1 = md.digest().collect { String.format('%02x', it) }.join()
+
+        def manifest = """{
+  "version": "${project.version}",
+  "url": "${baseUrl}/${jarName}",
+  "sha1": "${sha1}",
+  "notes": "${notes.replace('\\\\', '\\\\\\\\').replace('"', '\\\\"')}"
+}
+"""
+        new File(releaseDir, 'latest.json').text = manifest
+        println ""
+        println "  Release staged → ${releaseDir}"
+        println "    ${jarName}   (v${project.version}, sha1 ${sha1.substring(0, 12)}…)"
+        println "    latest.json  → url ${baseUrl}/${jarName}"
+        println "  Serve it:  gradlew -p launcher serveUpdates"
+        println ""
+    }
+}
+
+// ── Update server ───────────────────────────────────────────────────────
+// Serves build/release over HTTP so the installed app can auto-update.
+// Run:  gradlew -p launcher serveUpdates   (default port 8770; -Pport=NNNN)
+tasks.register('serveUpdates', JavaExec) {
+    group = 'distribution'
+    description = 'Serves build/release over HTTP for the auto-updater (default port 8770).'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.luminamc.tools.UpdateServer'
+    args = [
+        layout.buildDirectory.dir('release').get().asFile.absolutePath,
+        (project.findProperty('port') ?: '8770').toString()
+    ]
+}
+
+// Refresh the bundled LuminaMC client mod jars (auto-installed into instances) from the
+// sibling multiloader build. Best-effort: silently skips loaders that aren't built yet.
+tasks.register('bundleClientMods') {
+    group = 'build'
+    description = 'Copies the latest LuminaMC client mod jars into launcher resources.'
+    doLast {
+        def ml = file("${projectDir}/../lumina-multiloader")
+        def dest = file("${projectDir}/src/main/resources/lumina-client")
+        dest.mkdirs()
+        def copyLatest = { String dir, pattern, String outName ->
+            def libs = file("${ml}/${dir}/build/libs")
+            if (!libs.exists()) return
+            def matches = (libs.listFiles() ?: []).findAll {
+                it.name ==~ pattern && !it.name.contains('sources') && !it.name.contains('javadoc')
+            }
+            if (matches) {
+                def jar = matches.sort { it.lastModified() }.last()
+                java.nio.file.Files.copy(jar.toPath(), new File(dest, outName).toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                println "[bundleClientMods] ${jar.name} -> ${outName}"
+            }
+        }
+        copyLatest('fabric',   /lumina-fabric-.*\.jar/,   'lumina-fabric.jar')
+        copyLatest('forge',    /LuminaMC-forge-.*\.jar/,  'lumina-forge.jar')
+        copyLatest('neoforge', /lumina-neoforge-.*\.jar/, 'lumina-neoforge.jar')
+    }
+}
+tasks.named('processResources') { dependsOn 'bundleClientMods' }

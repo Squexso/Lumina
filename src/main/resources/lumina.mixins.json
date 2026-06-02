@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.squxso.lumina.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "LuminaButtonMixin",
+    "LuminaChatCleanMixin",
+    "LuminaCrosshairMixin",
+    "LuminaZoomMixin",
+    "LuminaScreenBgMixin",
+    "LuminaGameMenuBgMixin",
+    "LuminaSplashMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
