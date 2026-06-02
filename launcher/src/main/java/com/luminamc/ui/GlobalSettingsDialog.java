@@ -90,6 +90,13 @@ public final class GlobalSettingsDialog {
         ramMin.valueProperty().addListener((o, a, b) -> { cfg.defaultRamMinMb = round(b.doubleValue()); minVal.setText(cfg.defaultRamMinMb + " MB"); });
         ramMax.valueProperty().addListener((o, a, b) -> { cfg.defaultRamMaxMb = round(b.doubleValue()); maxVal.setText(cfg.defaultRamMaxMb + " MB"); });
 
+        int recRam = com.luminamc.javart.SystemSpecs.recommendedMaxRamMb();
+        Button ramAuto = new Button("Auto");
+        ramAuto.getStyleClass().add("ghost-button");
+        javafx.scene.control.Tooltip.install(ramAuto, new javafx.scene.control.Tooltip(
+                "Recommended: " + recRam + " MB  (≈ half of your " + com.luminamc.javart.SystemSpecs.totalRamMb() + " MB)"));
+        ramAuto.setOnAction(e -> ramMax.setValue(recRam));
+
         // Downloads.
         Spinner<Integer> threads = new Spinner<>(1, 32, cfg.downloadThreads);
         threads.valueProperty().addListener((o, a, b) -> cfg.downloadThreads = b);
@@ -163,7 +170,7 @@ public final class GlobalSettingsDialog {
                         labeled("Custom path", javaPath)),
                 FxUi.card(FxUi.sectionTitle("Default memory"),
                         labeled("Minimum", sliderRow(ramMin, minVal)),
-                        labeled("Maximum", sliderRow(ramMax, maxVal))),
+                        labeled("Maximum", sliderRow(ramMax, maxVal, ramAuto))),
                 FxUi.card(FxUi.sectionTitle("Downloads"),
                         labeled("Parallel download threads", threads)),
                 FxUi.card(FxUi.sectionTitle("Appearance & behavior"),
@@ -206,6 +213,13 @@ public final class GlobalSettingsDialog {
     private HBox sliderRow(Slider s, Label v) {
         v.setMinWidth(80);
         HBox row = new HBox(12, s, v);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
+    }
+
+    private HBox sliderRow(Slider s, Label v, javafx.scene.Node extra) {
+        v.setMinWidth(80);
+        HBox row = new HBox(12, s, v, extra);
         row.setAlignment(Pos.CENTER_LEFT);
         return row;
     }

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LuminaMC — Minecraft Launcher</title>
+  <meta name="description" content="LuminaMC — a sleek, all-in-one custom Minecraft launcher. Instances for Vanilla, Fabric, Forge & NeoForge, one-click mods & a built-in HUD client." />
+  <style>
+    :root {
+      --violet: #8B5CF6;
+      --violet-deep: #5B21B6;
+      --cyan: #67E8F9;
+      --bg: #0B0712;
+      --panel: rgba(255,255,255,0.04);
+      --border: rgba(167,139,250,0.25);
+      --text: #ECE7F7;
+      --muted: #9A8FB8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #1A0F33 0%, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0 20px;
+    }
+    .hero { text-align: center; padding: 90px 0 40px; max-width: 760px; }
+    .logo {
+      font-size: 68px; font-weight: 800; letter-spacing: 6px;
+      background: linear-gradient(90deg, var(--violet), var(--cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 30px rgba(139,92,246,0.4));
+    }
+    .tagline { color: var(--muted); letter-spacing: 5px; font-size: 13px; margin-top: 6px; text-transform: uppercase; }
+    .pitch { margin: 26px auto 0; font-size: 18px; color: #C9BEE6; line-height: 1.6; max-width: 620px; }
+    .btns { margin-top: 38px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 15px 30px; border-radius: 14px; font-size: 16px; font-weight: 700;
+      text-decoration: none; transition: transform .12s ease, box-shadow .12s ease; cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--violet), var(--violet-deep));
+      color: #fff; box-shadow: 0 10px 30px rgba(139,92,246,0.45);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(139,92,246,0.6); }
+    .btn-ghost { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { transform: translateY(-2px); border-color: var(--violet); }
+    .sub { margin-top: 14px; font-size: 13px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; max-width: 920px; width: 100%; margin: 50px 0; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+    .card h3 { font-size: 16px; margin-bottom: 8px; }
+    .card p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .steps { max-width: 620px; width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 26px 30px; margin-bottom: 50px; }
+    .steps h2 { font-size: 20px; margin-bottom: 16px; }
+    .steps ol { padding-left: 20px; line-height: 2; color: #C9BEE6; }
+    .steps code { background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 6px; font-size: 13px; }
+    .note { color: var(--muted); font-size: 13px; margin-top: 14px; }
+    footer { color: var(--muted); font-size: 13px; padding: 30px 0 50px; text-align: center; }
+    footer a { color: var(--violet); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="logo">LUMINA</div>
+    <div class="tagline">Minecraft Launcher</div>
+    <p class="pitch">A sleek, all-in-one custom Minecraft launcher — instances for Vanilla, Fabric, Forge &amp; NeoForge, one-click mods &amp; shaders, and a built-in Right-Shift HUD client.</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="https://github.com/Squexso/Lumina/releases/latest/download/LuminaMC-windows.zip">⬇ Download for Windows</a>
+      <a class="btn btn-ghost" href="https://discord.gg/hZurxFCgJt">💬 Join our Discord</a>
+    </div>
+    <div class="sub">Free • Windows • Java included — no extra install needed</div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>🧩 Every loader</h3><p>Vanilla, Fabric, Forge &amp; NeoForge — any version, set up in seconds.</p></div>
+    <div class="card"><h3>🔎 One-click content</h3><p>Browse and install mods, shaders &amp; resource packs straight from Modrinth.</p></div>
+    <div class="card"><h3>🎯 Built-in HUD client</h3><p>FPS, coordinates, keystrokes &amp; more via the in-game Right-Shift panel.</p></div>
+    <div class="card"><h3>⚡ Smart defaults</h3><p>Auto-detected Java &amp; RAM, performance tuning, and a clean violet UI.</p></div>
+  </div>
+
+  <div class="steps">
+    <h2>Install in 3 steps</h2>
+    <ol>
+      <li>Click <strong>Download</strong> above, then right-click the ZIP → <code>Extract All</code></li>
+      <li>Open the folder → double-click <code>LuminaMC.exe</code></li>
+      <li>First time only: if Windows warns → <em>More info → Run anyway</em></li>
+    </ol>
+    <p class="note">It's safe — the warning just means the app isn't code-signed (a paid certificate). A desktop shortcut is created automatically on first launch.</p>
+  </div>
+
+  <footer>
+    Made with 💜 by Squexso · <a href="https://github.com/Squexso/Lumina">Source on GitHub</a> · <a href="https://github.com/Squexso/Lumina/releases">All releases</a>
+  </footer>
+</body>
+</html>

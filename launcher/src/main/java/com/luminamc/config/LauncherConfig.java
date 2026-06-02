@@ -36,8 +36,9 @@ public final class LauncherConfig {
     /** Check for updates automatically on launch. */
     public boolean autoUpdate = true;
 
-    /** Default points at the bundled update server (gradlew serveUpdates). */
-    public static final String DEFAULT_FEED_URL = "http://localhost:8770/latest.json";
+    /** GitHub Releases feed — always resolves to the newest published version. */
+    public static final String DEFAULT_FEED_URL =
+            "https://github.com/Squexso/Lumina/releases/latest/download/latest.json";
 
     /**
      * Microsoft Azure AD Application (client) ID used for sign-in.
@@ -48,6 +49,9 @@ public final class LauncherConfig {
 
     /** Total time (ms) Minecraft has been played through this launcher. */
     public long totalPlayMillis = 0L;
+
+    /** True once a desktop shortcut has been created on first run (packaged Windows app). */
+    public boolean desktopShortcutCreated = false;
 
     // ── Discord Rich Presence ──────────────────────────────────────────────
     /** Show a Discord status (logo + text) while the launcher is open. */
@@ -65,9 +69,15 @@ public final class LauncherConfig {
 
     public static LauncherConfig load() {
         LauncherConfig c = Json.read(LuminaPaths.config(), LauncherConfig.class, new LauncherConfig());
-        // Migrate the old placeholder feed URL to the working default.
-        if (c.updateFeedUrl == null || c.updateFeedUrl.isBlank() || c.updateFeedUrl.contains("luminamc.example")) {
+        // Migrate old/placeholder/local feed URLs to the working GitHub default.
+        if (c.updateFeedUrl == null || c.updateFeedUrl.isBlank()
+                || c.updateFeedUrl.contains("luminamc.example")
+                || c.updateFeedUrl.contains("localhost:8770")) {
             c.updateFeedUrl = DEFAULT_FEED_URL;
+        }
+        // Fresh install: size the default max heap to this machine (≈ half its RAM).
+        if (!c.setupComplete && c.defaultRamMaxMb == 4096) {
+            c.defaultRamMaxMb = com.luminamc.javart.SystemSpecs.recommendedMaxRamMb();
         }
         return c;
     }

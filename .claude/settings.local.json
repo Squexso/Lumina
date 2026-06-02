@@ -153,7 +153,10 @@
       "Bash(git config *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git count-objects *)"
+      "Bash(git count-objects *)",
+      "Bash(./gradlew.bat packageLauncher -q)",
+      "PowerShell(winget search wix --source winget 2>&1)",
+      "Bash(./gradlew.bat compileJava packageLauncher -q)"
     ]
   }
 }

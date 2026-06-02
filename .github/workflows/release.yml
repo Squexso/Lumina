@@ -26,11 +26,13 @@ jobs:
 
       - name: Build client mods (Fabric / Forge / NeoForge)
         working-directory: lumina-multiloader
+        shell: bash
         run: ./gradlew build --no-daemon
 
       - name: Package launcher (.exe) + update feed
         working-directory: launcher
-        run: ./gradlew packageLauncher publishRelease --no-daemon
+        shell: bash
+        run: ./gradlew packageLauncher publishRelease "-PbaseUrl=https://github.com/Squexso/Lumina/releases/download/${{ github.ref_name }}" --no-daemon
 
       # ── OPTIONAL: code-sign the .exe (see docs/RELEASE.md). Needs two repo secrets:
       #    WINDOWS_PFX_BASE64  – your .pfx certificate, base64-encoded
@@ -41,7 +43,7 @@ jobs:
       #   run: |
       #     [IO.File]::WriteAllBytes("cert.pfx", [Convert]::FromBase64String($env:PFX))
       #     $st = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Select-Object -Last 1).FullName
-      #     Get-ChildItem launcher\build\jpackage\*.exe | ForEach-Object {
+      #     Get-ChildItem launcher\build\dist\LuminaMC\LuminaMC.exe | ForEach-Object {
       #       & $st sign /fd SHA256 /f cert.pfx /p $env:PFXPW /tr http://timestamp.digicert.com /td SHA256 $_.FullName
       #     }
       #   env:
@@ -52,9 +54,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp launcher/build/release/*            dist/ 2>/dev/null || true
-          cp launcher/build/jpackage/*.exe       dist/ 2>/dev/null || true
-          cp launcher/build/jpackage/*.msi       dist/ 2>/dev/null || true
+          # Launcher app-image (LuminaMC/ folder with LuminaMC.exe + bundled Java) → one zip
+          (cd launcher/build/dist && 7z a -r ../../../dist/LuminaMC-windows.zip LuminaMC >/dev/null) || true
+          # Update feed used by the in-app auto-updater (launcher jar + latest.json)
+          cp launcher/build/release/* dist/ 2>/dev/null || true
+          # Client mods
           cp lumina-multiloader/fabric/build/libs/lumina-fabric-*.jar     dist/ 2>/dev/null || true
           cp lumina-multiloader/forge/build/libs/LuminaMC-forge-*.jar     dist/ 2>/dev/null || true
           cp lumina-multiloader/neoforge/build/libs/lumina-neoforge-*.jar dist/ 2>/dev/null || true

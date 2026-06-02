@@ -75,6 +75,9 @@ public final class LuminaApp extends Application {
         // Minimise-to-tray: keep running in the background when the window is minimised.
         if (!Boolean.getBoolean("luminamc.smoketest")) {
             com.luminamc.ui.TraySupport.install(stage);
+            // On first run of the packaged app, drop a Desktop shortcut.
+            new Thread(() -> com.luminamc.ui.DesktopShortcut.ensureOnFirstRun(ctx.config),
+                    "luminamc-desktop-shortcut").start();
         }
 
         // Discord Rich Presence — shows the launcher status (logo + text) while open.
