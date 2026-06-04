@@ -156,7 +156,11 @@
       "Bash(git count-objects *)",
       "Bash(./gradlew.bat packageLauncher -q)",
       "PowerShell(winget search wix --source winget 2>&1)",
-      "Bash(./gradlew.bat compileJava packageLauncher -q)"
+      "Bash(./gradlew.bat compileJava packageLauncher -q)",
+      "Bash(curl -sL \"https://github.com/Squexso/Lumina/releases/latest/download/latest.json\")",
+      "Bash(curl -sI \"https://github.com/Squexso/Lumina/releases/latest\")",
+      "Bash(curl -s \"https://api.github.com/repos/Squexso/Lumina/releases/latest\")",
+      "Bash(./gradlew.bat publishRelease \"-PbaseUrl=https://github.com/Squexso/Lumina/releases/download/v0.1.1\" -q)"
     ]
   }
 }

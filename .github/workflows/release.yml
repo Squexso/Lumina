@@ -32,7 +32,10 @@ jobs:
       - name: Package launcher (.exe) + update feed
         working-directory: launcher
         shell: bash
-        run: ./gradlew packageLauncher publishRelease "-PbaseUrl=https://github.com/Squexso/Lumina/releases/download/${{ github.ref_name }}" --no-daemon
+        run: |
+          ./gradlew packageLauncher publishRelease "-PbaseUrl=https://github.com/Squexso/Lumina/releases/download/${{ github.ref_name }}" --no-daemon
+          echo "=== build/release ==="; ls -la build/release
+          echo "=== build/dist ===";    ls -la build/dist
 
       # ── OPTIONAL: code-sign the .exe (see docs/RELEASE.md). Needs two repo secrets:
       #    WINDOWS_PFX_BASE64  – your .pfx certificate, base64-encoded
@@ -53,19 +56,20 @@ jobs:
       - name: Collect release artifacts
         shell: bash
         run: |
+          set -euxo pipefail
           mkdir -p dist
           # Launcher app-image (LuminaMC/ folder with LuminaMC.exe + bundled Java) → one zip
-          (cd launcher/build/dist && 7z a -r ../../../dist/LuminaMC-windows.zip LuminaMC >/dev/null) || true
-          # Update feed used by the in-app auto-updater (launcher jar + latest.json)
-          cp launcher/build/release/* dist/ 2>/dev/null || true
-          # Client mods
-          cp lumina-multiloader/fabric/build/libs/lumina-fabric-*.jar     dist/ 2>/dev/null || true
-          cp lumina-multiloader/forge/build/libs/LuminaMC-forge-*.jar     dist/ 2>/dev/null || true
-          cp lumina-multiloader/neoforge/build/libs/lumina-neoforge-*.jar dist/ 2>/dev/null || true
+          ( cd launcher/build/dist && 7z a -r "$GITHUB_WORKSPACE/dist/LuminaMC-windows.zip" LuminaMC >/dev/null )
+          # Update feed — REQUIRED for auto-update; fail the build if it's missing.
+          cp launcher/build/release/latest.json dist/
+          cp launcher/build/release/*.jar       dist/
+          # Client mods (optional — the launcher already bundles them)
+          find lumina-multiloader -path '*/build/libs/*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' -exec cp {} dist/ \; || true
           ls -la dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
+          make_latest: true
           generate_release_notes: true

@@ -92,9 +92,13 @@ public final class UpdateFlow {
                 Platform.runLater(() -> {
                     if (staged) {
                         sub.setText("Fertig — LuminaMC startet neu…");
-                        // Exit so the helper can swap the jar and relaunch.
-                        Platform.exit();
-                        System.exit(0);
+                        // Hard exit after a short beat: halt() skips JVM shutdown hooks, so the
+                        // system-tray (AWT) and Discord-IPC threads can never block the jar swap.
+                        // The detached swap script waits for this process to vanish, then relaunches.
+                        new Thread(() -> {
+                            try { Thread.sleep(400); } catch (InterruptedException ignored) {}
+                            Runtime.getRuntime().halt(0);
+                        }, "luminamc-update-halt").start();
                     } else {
                         progress.close();
                         LuminaDialog.info(owner, "Update bereit",
