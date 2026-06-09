@@ -51,8 +51,10 @@ public final class LuminaAccessories {
             pose.mulPose(Axis.YP.rotationDegrees(angle));
             pose.translate(0, -1.0, 0);
         }
+        // Full-bright so the cosmetic glows uniformly (no per-cube world shading) — reads as a
+        // clean, magical shape rather than a cluster of separately-lit blocks.
         collector.submitModel(model, state, pose, RenderTypes.entitySolid(colourTex(argb)),
-                light, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
+                0xF000F0, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
         pose.popPose();
     }
 
@@ -110,8 +112,8 @@ public final class LuminaAccessories {
         if (halo != null) return halo;
         MeshDefinition md = new MeshDefinition();
         CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
-        int n = 60;
-        double radius = 4.3, sz = 0.55;
+        int n = 96;
+        double radius = 4.4, sz = 0.42;
         for (int i = 0; i < n; i++) {
             double a = i / (double) n * Math.PI * 2;
             float cx = (float) (Math.cos(a) * radius);
