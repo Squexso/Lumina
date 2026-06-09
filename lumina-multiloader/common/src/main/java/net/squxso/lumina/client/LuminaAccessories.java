@@ -106,20 +106,27 @@ public final class LuminaAccessories {
         return wings = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
     }
 
-    /** A halo: a fine ring of many small segments — smooth from a distance, yet a real 3D ring
-     *  that's visible from EVERY angle (a flat disc is invisible edge-on). */
+    /** A halo: a real TORUS (donut) — a ring with a round tube cross-section, built from small
+     *  cubes around both the main ring and the tube, so it reads as a smooth 3D ring (glows
+     *  full-bright, visible from every angle). */
     private static EntityModel<AvatarRenderState> halo() {
         if (halo != null) return halo;
         MeshDefinition md = new MeshDefinition();
         CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
-        int n = 96;
-        double radius = 4.4, sz = 0.42;
-        for (int i = 0; i < n; i++) {
-            double a = i / (double) n * Math.PI * 2;
-            float cx = (float) (Math.cos(a) * radius);
-            float cz = (float) (Math.sin(a) * radius);
-            c.addBox(cx - (float) (sz / 2), -15f - (float) (sz / 2), cz - (float) (sz / 2),
-                    (float) sz, (float) sz, (float) sz);
+        int major = 48, minor = 6;             // segments around the ring / around the tube
+        double R = 4.3, r = 0.55, sz = 0.34, baseY = -15;
+        for (int i = 0; i < major; i++) {
+            double th = i / (double) major * Math.PI * 2;
+            double ct = Math.cos(th), st = Math.sin(th);
+            for (int j = 0; j < minor; j++) {
+                double ph = j / (double) minor * Math.PI * 2;
+                double rr = R + r * Math.cos(ph);
+                float cx = (float) (ct * rr);
+                float cz = (float) (st * rr);
+                float cy = (float) (baseY + r * Math.sin(ph));
+                c.addBox(cx - (float) (sz / 2), cy - (float) (sz / 2), cz - (float) (sz / 2),
+                        (float) sz, (float) sz, (float) sz);
+            }
         }
         md.getRoot().addOrReplaceChild("halo", c, PartPose.ZERO);
         return halo = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
