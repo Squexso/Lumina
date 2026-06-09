@@ -60,10 +60,8 @@ public final class LuminaAccessories {
 
     private static Identifier colourTex(int argb) {
         if (colourTex != null && colourArgb == argb) return colourTex;
-        int a = (argb >>> 24) & 0xFF, r = (argb >> 16) & 0xFF, g = (argb >> 8) & 0xFF, b = argb & 0xFF;
-        int abgr = (a << 24) | (b << 16) | (g << 8) | r;   // NativeImage is ABGR
         NativeImage img = new NativeImage(8, 8, false);
-        for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) img.setPixel(x, y, abgr);
+        for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) img.setPixel(x, y, argb);  // setPixel takes ARGB
         Identifier id = Identifier.fromNamespaceAndPath("lumina", "textures/entity/accessory_color");
         Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(() -> "lumina_accessory", img));
         colourArgb = argb;
@@ -108,12 +106,12 @@ public final class LuminaAccessories {
         if (halo != null) return halo;
         MeshDefinition md = new MeshDefinition();
         CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
-        int n = 18;
+        int n = 16;
         for (int i = 0; i < n; i++) {
             double a = i / (double) n * Math.PI * 2;
-            float cx = (float) (Math.cos(a) * 5.0);
-            float cz = (float) (Math.sin(a) * 5.0);
-            c.addBox(cx - 0.5f, -13.0f, cz - 0.5f, 1.0f, 1.0f, 1.0f);   // a ring above the head
+            float cx = (float) (Math.cos(a) * 4.5);
+            float cz = (float) (Math.sin(a) * 4.5);
+            c.addBox(cx - 0.5f, -11.0f, cz - 0.5f, 1.0f, 1.0f, 1.0f);   // a ring just above the head
         }
         md.getRoot().addOrReplaceChild("halo", c, PartPose.ZERO);
         return halo = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
