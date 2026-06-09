@@ -29,7 +29,7 @@ public final class LuminaCosmetics {
      * Sets {@code features.lumina_cape} in the instance config to match the
      * currently-equipped cape. Safe to call on every launch.
      */
-    public static void writeEquipped(Instance inst, String equippedCape) {
+    public static void writeEquipped(Instance inst, String equippedCape, String equippedAccessory) {
         try {
             Path path = LuminaPaths.instanceLuminaConfig(inst.id);
             JsonObject root = new JsonObject();
@@ -51,6 +51,19 @@ public final class LuminaCosmetics {
             boolean capeOn = cape != null;
             features.addProperty("lumina_cape", capeOn);
             root.add("features", features);
+
+            // Accessory (wings / halo / aura): the type + colour the mod renders on the player.
+            com.luminamc.shop.Cosmetic acc = equippedAccessory != null ? ShopCatalog.accessory(equippedAccessory) : null;
+            JsonObject cosmetics = root.has("cosmetics") && root.get("cosmetics").isJsonObject()
+                    ? root.getAsJsonObject("cosmetics") : new JsonObject();
+            if (acc != null && acc.accessoryType() != null) {
+                cosmetics.addProperty("accessory", acc.accessoryType());
+                cosmetics.addProperty("accessoryColor", acc.colorTop());
+            } else {
+                cosmetics.remove("accessory");
+                cosmetics.remove("accessoryColor");
+            }
+            root.add("cosmetics", cosmetics);
 
             Files.createDirectories(path.getParent());
             try (Writer w = Files.newBufferedWriter(path)) {

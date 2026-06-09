@@ -32,6 +32,15 @@ public final class FeatureManager {
     private static final List<Feature> FEATURES = new ArrayList<>();
     private static boolean initialised = false;
 
+    // Equipped accessory the launcher wrote into config/lumina.json (wings/halo/aura).
+    private static String accessoryType;            // null when none equipped
+    private static int accessoryColor = 0xFFFFFFFF; // ARGB tint
+
+    /** The equipped accessory type ("wings"/"halo"/"aura"), or {@code null}. */
+    public static String accessoryType() { return accessoryType; }
+    /** The equipped accessory tint colour (ARGB). */
+    public static int accessoryColor() { return accessoryColor; }
+
     private FeatureManager() {}
 
     /** Registers all built-in features (idempotent). Grown as features are ported. */
@@ -180,6 +189,17 @@ public final class FeatureManager {
                 for (Feature f : FEATURES) {
                     if (feats != null && feats.has(f.id)) f.setEnabled(feats.get(f.id).getAsBoolean());
                     if (sets != null && sets.has(f.id)) applySettings(f, sets.getAsJsonObject(f.id));
+                }
+                if (root.has("cosmetics") && root.get("cosmetics").isJsonObject()) {
+                    JsonObject cos = root.getAsJsonObject("cosmetics");
+                    accessoryType = cos.has("accessory") && !cos.get("accessory").isJsonNull()
+                            ? cos.get("accessory").getAsString() : null;
+                    if (cos.has("accessoryColor")) {
+                        try {
+                            int rgb = Integer.parseInt(cos.get("accessoryColor").getAsString().replace("#", ""), 16);
+                            accessoryColor = 0xFF000000 | (rgb & 0xFFFFFF);
+                        } catch (Exception ignored) {}
+                    }
                 }
             }
         } catch (Exception ignored) {

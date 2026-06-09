@@ -158,8 +158,8 @@ public final class LaunchService {
                         + " — skipped (and removed) for " + inst.mcVersion + " so it launches cleanly."));
             }
 
-            // Sync the equipped Lumina Cape (from the shop) into the in-game mod config.
-            com.luminamc.game.LuminaCosmetics.writeEquipped(inst, ctx.config.equippedCape);
+            // Sync the equipped cape + accessory (from the shop) into the in-game mod config.
+            com.luminamc.game.LuminaCosmetics.writeEquipped(inst, ctx.config.equippedCape, ctx.config.equippedAccessory);
 
             fx(cb, c -> { c.progress(1.0, "Ready"); c.phase("Launching Minecraft…"); });
             List<String> captured = Collections.synchronizedList(new CopyOnWriteArrayList<>());

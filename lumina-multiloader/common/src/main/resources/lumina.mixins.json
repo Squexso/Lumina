@@ -9,7 +9,8 @@
     "LuminaFovMixin",
     "LuminaChatMixin",
     "LuminaLightMixin",
-    "LuminaCapeMixin"
+    "LuminaCapeMixin",
+    "LuminaAccessoryMixin"
   ],
   "server": [],
   "injectors": {
