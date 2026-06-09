@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.Model;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
@@ -30,13 +30,13 @@ public final class LuminaAccessories {
 
     private LuminaAccessories() {}
 
-    private static Model wings, halo, aura;
+    private static EntityModel<AvatarRenderState> wings, halo, aura;
     private static int colourArgb;
     private static Identifier colourTex;
 
     public static void render(SubmitNodeCollector collector, PoseStack pose, AvatarRenderState state,
                               int light, String type, int argb) {
-        Model model = switch (type) {
+        EntityModel<AvatarRenderState> model = switch (type) {
             case "wings" -> wings();
             case "halo"  -> halo();
             case "aura"  -> aura();
@@ -73,11 +73,13 @@ public final class LuminaAccessories {
 
     // ── geometry (built in player model space: up = -Y, back = +Z, 16 units = 1 block) ──
 
-    private static Model wrap(ModelPart root) {
-        return new Model.Simple(root, RenderTypes::entitySolid);
+    // A static model typed to AvatarRenderState so submitModel's setupAnim(state) won't
+    // ClassCastException (Model.Simple is Model<Unit>). setupAnim just resets the pose.
+    private static EntityModel<AvatarRenderState> wrap(ModelPart root) {
+        return new EntityModel<AvatarRenderState>(root, RenderTypes::entitySolid) {};
     }
 
-    private static Model wings() {
+    private static EntityModel<AvatarRenderState> wings() {
         if (wings != null) return wings;
         MeshDefinition md = new MeshDefinition();
         CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
@@ -102,7 +104,7 @@ public final class LuminaAccessories {
         return wings = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
     }
 
-    private static Model halo() {
+    private static EntityModel<AvatarRenderState> halo() {
         if (halo != null) return halo;
         MeshDefinition md = new MeshDefinition();
         CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
@@ -117,7 +119,7 @@ public final class LuminaAccessories {
         return halo = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
     }
 
-    private static Model aura() {
+    private static EntityModel<AvatarRenderState> aura() {
         if (aura != null) return aura;
         MeshDefinition md = new MeshDefinition();
         CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
