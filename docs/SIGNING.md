@@ -20,14 +20,8 @@ setup below, so releases keep working unsigned in the meantime.
 ## Prerequisites
 
 - A public GitHub repo (✅ `Squexso/Lumina`).
-- An **OSI-approved open-source license** at the repo root (MIT / Apache-2.0 / GPL-3.0 …).
-  SignPath Foundation **only signs real open-source projects** and requires this.
-
-  > ⚠️ **Blocker right now:** `LICENSE.txt` currently says *“All rights reserved”* — that
-  > is a **proprietary** license, so the project does **not** qualify for the free
-  > SignPath Foundation plan yet. To use the free route you must relicense under an
-  > OSI-approved license (which makes the source legally open/forkable). If you’d rather
-  > keep the code proprietary, use a **paid** signer instead — see *Paid alternatives*.
+- An **OSI-approved open-source license** at the repo root (✅ `LICENSE.txt` is now
+  **GPL-3.0**, so the project qualifies for the free SignPath Foundation plan).
 
 ## Paid alternatives (no open-sourcing required)
 
