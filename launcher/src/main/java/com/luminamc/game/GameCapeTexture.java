@@ -44,8 +44,37 @@ public final class GameCapeTexture {
                 img.setRGB(x, y, near(p, oldGrad) ? newGrad : p);
             }
         }
+        // Draw a clear, high-contrast Lumina crystal over the cape's back face so the logo
+        // reads on EVERY cape colour (the recoloured template crystal washes out, especially
+        // on violet capes). Drawn ~2x tall to compensate the cape model's vertical squish.
+        drawCrystal(img);
+
         Files.createDirectories(out.getParent());
         ImageIO.write(img, "png", out.toFile());
+    }
+
+    /** Paints the faceted Lumina crystal on the cape's back-face region (x 1..11, y 2..34). */
+    private static void drawCrystal(BufferedImage img) {
+        java.awt.Graphics2D g = img.createGraphics();
+        int[] px = {6, 9, 8, 6, 4, 3};
+        int[] py = {5, 13, 28, 32, 28, 13};
+        java.awt.Polygon gem = new java.awt.Polygon(px, py, 6);
+        // soft outer glow so it stands off any background
+        g.setColor(new java.awt.Color(0xC4, 0xB5, 0xFD, 90));
+        g.fill(new java.awt.Polygon(new int[]{6, 10, 9, 6, 3, 2}, new int[]{4, 13, 29, 33, 29, 13}, 6));
+        // faceted body: light top → deep violet bottom
+        g.setPaint(new java.awt.GradientPaint(0, 5, new java.awt.Color(0xED, 0xE9, 0xFE),
+                0, 32, new java.awt.Color(0x6D, 0x28, 0xD9)));
+        g.fill(gem);
+        // left facet highlight + centre seam for a 3D gem look
+        g.setColor(new java.awt.Color(0xF8, 0xF6, 0xFF));
+        g.drawLine(4, 15, 5, 26);
+        g.setColor(new java.awt.Color(0x4C, 0x1D, 0x95, 150));
+        g.drawLine(6, 7, 6, 30);
+        // crisp dark outline
+        g.setColor(new java.awt.Color(0x3B, 0x0E, 0x6B));
+        g.draw(gem);
+        g.dispose();
     }
 
     private static int lerp(int a, int b, double f) {
