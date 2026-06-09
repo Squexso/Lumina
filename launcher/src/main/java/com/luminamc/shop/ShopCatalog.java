@@ -39,7 +39,13 @@ public final class ShopCatalog {
             accessory("angel_wings", "Angel Wings", Rarity.EPIC, "#EAF0FF", "wings",
                     "Radiant feathered wings on your back."),
             accessory("halo", "Halo", Rarity.LEGENDARY, "#FCD34D", "halo",
-                    "A glowing golden ring floating above your head."));
+                    "A glowing golden ring floating above your head."),
+            accessory("ember_aura", "Ember Aura", Rarity.RARE, "#FDBA74", "aura",
+                    "A warm cluster of glowing embers orbiting you."),
+            accessory("shadow_wings", "Shadow Wings", Rarity.EPIC, "#94A3B8", "wings",
+                    "Dark feathered wings edged with pale light."),
+            accessory("void_halo", "Void Halo", Rarity.LEGENDARY, "#A78BFA", "halo",
+                    "A glowing violet ring of pure void energy."));
 
     public static Cosmetic accessory(String id) {
         for (Cosmetic c : ACCESSORIES) if (c.id().equals(id)) return c;
@@ -65,7 +71,19 @@ public final class ShopCatalog {
             cape("galaxy_cape", "Galaxy Cape", Rarity.LEGENDARY, "#A5B4FC", "#1E1B4B",
                     "Deep cosmic indigo — wear the night sky itself."),
             cape("phoenix_cape", "Phoenix Cape", Rarity.LEGENDARY, "#FDE68A", "#B91C1C",
-                    "Molten gold igniting into fiery red. Reborn in flame."));
+                    "Molten gold igniting into fiery red. Reborn in flame."),
+            cape("midnight_cape", "Midnight Cape", Rarity.UNCOMMON, "#6366F1", "#0B1026",
+                    "Deep indigo dusk fading into the midnight sky."),
+            cape("rose_cape", "Rose Cape", Rarity.UNCOMMON, "#FBCFE8", "#9D174D",
+                    "Soft rose petals deepening into rich magenta."),
+            cape("amber_cape", "Amber Cape", Rarity.RARE, "#FCD34D", "#92400E",
+                    "Warm amber glowing down into burnished bronze."),
+            cape("frost_cape", "Frost Cape", Rarity.RARE, "#BAE6FD", "#0C4A6E",
+                    "Crisp glacial blue, cold as the deep winter."),
+            cape("venom_cape", "Venom Cape", Rarity.EPIC, "#A3E635", "#365314",
+                    "Toxic venom-green with a faint, sickly glow."),
+            cape("celestial_cape", "Celestial Cape", Rarity.LEGENDARY, "#DDD6FE", "#312E81",
+                    "Pale starlight drifting over deep cosmic violet."));
 
     /**
      * Real-money token bundles (PayPal — coming soon). Base rate is 1000 tokens
