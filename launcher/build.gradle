@@ -70,6 +70,10 @@ tasks.named('run') {
     if (project.hasProperty('smoke')) {
         systemProperty 'luminamc.smoketest', 'true'
     }
+    // `gradlew run -Pautolaunch` opens the launcher and immediately plays the last instance.
+    if (project.hasProperty('autolaunch')) {
+        systemProperty 'luminamc.autolaunch', 'true'
+    }
 }
 
 // ── Regenerates packaging/lumina.ico as a crisp MULTI-resolution icon

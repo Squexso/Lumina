@@ -92,6 +92,25 @@ public final class LuminaApp extends Application {
             com.luminamc.ui.UpdateFlow.checkOnStartup(stage, ctx);
         }
 
+        // Auto-launch (dev/testing convenience): immediately play the most-recently-played
+        // instance. Enabled via -Dluminamc.autolaunch=true.
+        if (Boolean.getBoolean("luminamc.autolaunch") && !Boolean.getBoolean("luminamc.smoketest")) {
+            javafx.application.Platform.runLater(() -> {
+                var all = ctx.instances.all();
+                if (all.isEmpty()) { System.out.println("[autolaunch] no instances"); return; }
+                var inst = all.get(0);   // already sorted most-recently-played first
+                System.out.println("[autolaunch] launching instance " + inst.id + " (" + inst.name + ")");
+                new com.luminamc.ui.LaunchService(ctx).launchAsync(inst, new com.luminamc.ui.LaunchService.Callbacks() {
+                    public void phase(String t) { System.out.println("[autolaunch] " + t); }
+                    public void progress(double f, String d) {}
+                    public void log(String l) {}
+                    public void started(Process p) { System.out.println("[autolaunch] game process started"); }
+                    public void finished(com.luminamc.crash.CrashReporter.Report r) {}
+                    public void failed(Throwable e) { System.out.println("[autolaunch] failed: " + e); }
+                });
+            });
+        }
+
         if (Boolean.getBoolean("luminamc.smoketest")) {
             try {
                 java.nio.file.Files.writeString(
