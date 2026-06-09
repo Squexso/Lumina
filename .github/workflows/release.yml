@@ -37,21 +37,8 @@ jobs:
           echo "=== build/release ==="; ls -la build/release
           echo "=== build/dist ===";    ls -la build/dist
 
-      # ── OPTIONAL: code-sign the .exe (see docs/RELEASE.md). Needs two repo secrets:
-      #    WINDOWS_PFX_BASE64  – your .pfx certificate, base64-encoded
-      #    WINDOWS_PFX_PASSWORD – its password
-      # - name: Sign the installer
-      #   if: ${{ secrets.WINDOWS_PFX_BASE64 != '' }}
-      #   shell: pwsh
-      #   run: |
-      #     [IO.File]::WriteAllBytes("cert.pfx", [Convert]::FromBase64String($env:PFX))
-      #     $st = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Select-Object -Last 1).FullName
-      #     Get-ChildItem launcher\build\dist\LuminaMC\LuminaMC.exe | ForEach-Object {
-      #       & $st sign /fd SHA256 /f cert.pfx /p $env:PFXPW /tr http://timestamp.digicert.com /td SHA256 $_.FullName
-      #     }
-      #   env:
-      #     PFX:   ${{ secrets.WINDOWS_PFX_BASE64 }}
-      #     PFXPW: ${{ secrets.WINDOWS_PFX_PASSWORD }}
+      # Code-signing happens further down via SignPath (free for OSS) — it signs the
+      # .exe inside the release zip so Windows SmartScreen trusts it. See docs/SIGNING.md.
 
       - name: Collect release artifacts
         shell: bash
@@ -66,6 +53,44 @@ jobs:
           # Client mods (optional — the launcher already bundles them)
           find lumina-multiloader -path '*/build/libs/*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' -exec cp {} dist/ \; || true
           ls -la dist
+
+      # ── Code-sign the Windows .exe via SignPath (FREE for open-source projects).
+      #    Signs the PE files inside LuminaMC-windows.zip so Windows SmartScreen stops
+      #    flagging the download as "unknown publisher". This is a NO-OP until the
+      #    SignPath repo variables + secret are configured (see docs/SIGNING.md) —
+      #    releases keep building unsigned until then, so nothing breaks meanwhile.
+      - name: Upload zip for signing
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        id: unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: luminamc-windows-unsigned
+          path: dist/LuminaMC-windows.zip
+          if-no-files-found: error
+
+      - name: Sign with SignPath
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          skip-decompress: true
+          output-artifact-directory: signed
+
+      - name: Swap in the signed zip
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        shell: bash
+        run: |
+          set -euxo pipefail
+          signed_zip="$(find signed -name '*.zip' | head -1)"
+          test -n "$signed_zip"
+          cp "$signed_zip" dist/LuminaMC-windows.zip
+          echo "Signed zip in place:"; ls -la dist/LuminaMC-windows.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
