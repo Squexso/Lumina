@@ -195,7 +195,7 @@ public final class SkinView3D {
     /** A slowly-orbiting cluster of glowing 5-pointed stars around the body. */
     private Node aura(Color color) {
         Group g = new Group();
-        Color bright = color.interpolate(Color.WHITE, 0.4);
+        Color bright = color.interpolate(Color.WHITE, 0.2);   // keep the hue so warm/cool auras read clearly differently
         double[][] stars = {
                 {-10, -26, -2, 1.6}, {10, -24, -3, 1.3}, {-11, -15, -4, 1.5}, {11, -13, -2, 1.6},
                 {0, -31, -5, 1.2}, {-6, -8, -3, 1.1}, {7, -7, -4, 1.4}, {3, -2, -5, 1.1}, {-3, -19, -6, 1.3}};
@@ -251,9 +251,11 @@ public final class SkinView3D {
         double u = 2.0;                                              // cube edge — big enough to read as deliberate voxel art
         Group g = new Group();
 
-        Color root = color.interpolate(Color.web("#8C97B8"), 0.55);  // shaded inner feather
-        Color mid  = color.interpolate(Color.web("#B4BEDA"), 0.28);  // soft feather body
-        Color tip  = color.interpolate(Color.WHITE, 0.62);          // bright, glowing outer tip
+        // Shades derived from the accessory's OWN colour (not fixed greys), so a dark
+        // colour gives dark wings (Shadow Wings) while a white one stays bright (Angel Wings).
+        Color root = color.deriveColor(0, 1.0, 0.50, 1.0);          // a darker shade of the colour
+        Color mid  = color.deriveColor(0, 1.05, 0.90, 1.0);         // the colour itself
+        Color tip  = color.interpolate(Color.WHITE, 0.42);          // lifted toward white, keeps the hue
 
         // Primary layer — long feathers spanning the whole top edge.
         int primaries = 11;
