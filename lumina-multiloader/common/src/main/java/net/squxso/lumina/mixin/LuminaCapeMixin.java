@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.entity.layers.CapeLayer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
+import net.squxso.lumina.client.LuminaCapeTextures;
 import net.squxso.lumina.feature.FeatureManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,9 +35,6 @@ public abstract class LuminaCapeMixin {
 
     @Shadow @Final private HumanoidModel<AvatarRenderState> model;
 
-    private static final Identifier LUMINA$CAPE =
-            Identifier.fromNamespaceAndPath("lumina", "textures/entity/lumina_cape.png");
-
     @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
     private void lumina$renderCape(PoseStack pose, SubmitNodeCollector collector, int light,
                                    AvatarRenderState state, float yRot, float xRot, CallbackInfo ci) {
@@ -50,7 +47,7 @@ public abstract class LuminaCapeMixin {
 
         pose.pushPose();
         collector.submitModel(this.model, state, pose,
-                RenderTypes.entitySolid(LUMINA$CAPE), light,
+                RenderTypes.entitySolid(LuminaCapeTextures.get()), light,
                 OverlayTexture.NO_OVERLAY, state.outlineColor, null);
         pose.popPose();
         ci.cancel();   // replace vanilla's cape (Mojang cape or none) with ours

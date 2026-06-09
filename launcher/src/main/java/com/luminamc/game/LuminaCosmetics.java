@@ -45,13 +45,25 @@ public final class LuminaCosmetics {
                     ? root.getAsJsonObject("features")
                     : new JsonObject();
 
-            boolean capeOn = ShopCatalog.LUMINA_CAPE_ID.equals(equippedCape);
+            // Any equipped cape turns the cosmetic on; the in-game texture is generated
+            // in that cape's colours below (ShopCatalog.cosmetic(..) only returns capes).
+            com.luminamc.shop.Cosmetic cape = equippedCape != null ? ShopCatalog.cosmetic(equippedCape) : null;
+            boolean capeOn = cape != null;
             features.addProperty("lumina_cape", capeOn);
             root.add("features", features);
 
             Files.createDirectories(path.getParent());
             try (Writer w = Files.newBufferedWriter(path)) {
                 GSON.toJson(root, w);
+            }
+
+            // Recolour the cape template to the equipped cape and drop it where the mod
+            // looks for it (config/lumina/cape.png), or clear it when no cape is equipped.
+            Path capePng = LuminaPaths.instanceLuminaCapePng(inst.id);
+            if (capeOn) {
+                GameCapeTexture.write(cape.colorTop(), cape.colorBottom(), capePng);
+            } else {
+                Files.deleteIfExists(capePng);
             }
         } catch (Exception ignored) {
             // cosmetic sync is best-effort; never block a launch on it

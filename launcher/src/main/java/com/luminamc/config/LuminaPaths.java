@@ -37,6 +37,8 @@ public final class LuminaPaths {
     public static Path instanceShaderPacks(String id)   { return instanceGameDir(id).resolve("shaderpacks"); }
     public static Path instanceScreenshots(String id) { return instanceGameDir(id).resolve("screenshots"); }
     public static Path instanceLuminaConfig(String id) { return instanceGameDir(id).resolve("config").resolve("lumina.json"); }
+    /** The active equipped-cape texture the mod renders in-game (generated per launch). */
+    public static Path instanceLuminaCapePng(String id) { return instanceGameDir(id).resolve("config").resolve("lumina").resolve("cape.png"); }
 
     /** Creates the shared base directories. Safe to call repeatedly. */
     public static void ensureBaseDirs() {
