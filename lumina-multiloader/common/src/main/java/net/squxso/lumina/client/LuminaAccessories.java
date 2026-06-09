@@ -30,18 +30,29 @@ public final class LuminaAccessories {
 
     private LuminaAccessories() {}
 
+    private static final int FULL_BRIGHT = 0xF000F0;
+
     private static EntityModel<AvatarRenderState> wings, halo, aura;
-    private static int colourArgb;
-    private static Identifier colourTex;
+    private static int colourArgb, ringArgb;
+    private static Identifier colourTex, ringTexId;
 
     public static void render(SubmitNodeCollector collector, PoseStack pose, AvatarRenderState state,
                               int light, String type, int argb) {
-        EntityModel<AvatarRenderState> model = switch (type) {
-            case "wings" -> wings();
-            case "halo"  -> halo();
-            case "aura"  -> aura();
-            default      -> null;
-        };
+        // Halo: a flat disc carrying a smooth ring (donut) texture — the only way to get a truly
+        // CLEAN circle in MC. Horizontal, so it shows from the usual above/behind camera. Glows.
+        if ("halo".equals(type)) {
+            pose.pushPose();
+            pose.translate(0, -14.5, 0);                 // above the head
+            pose.mulPose(Axis.XP.rotationDegrees(12));   // a hair of tilt so it reads as a ring, not a line
+            pose.scale(0.19f, 0.19f, 0.19f);             // disc modelled big → crisp ring texture
+            collector.submitModel(halo(), state, pose, RenderTypes.entityCutoutNoCull(ringTex(argb)),
+                    FULL_BRIGHT, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
+            pose.popPose();
+            return;
+        }
+
+        EntityModel<AvatarRenderState> model = "wings".equals(type) ? wings()
+                : "aura".equals(type) ? aura() : null;
         if (model == null) return;
 
         pose.pushPose();
@@ -51,10 +62,9 @@ public final class LuminaAccessories {
             pose.mulPose(Axis.YP.rotationDegrees(angle));
             pose.translate(0, -1.0, 0);
         }
-        // Full-bright so the cosmetic glows uniformly (no per-cube world shading) — reads as a
-        // clean, magical shape rather than a cluster of separately-lit blocks.
+        // Full-bright so the cosmetic glows uniformly (no per-cube world shading).
         collector.submitModel(model, state, pose, RenderTypes.entitySolid(colourTex(argb)),
-                0xF000F0, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
+                FULL_BRIGHT, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
         pose.popPose();
     }
 
@@ -68,6 +78,31 @@ public final class LuminaAccessories {
         Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(() -> "lumina_accessory", img));
         colourArgb = argb;
         colourTex = id;
+        return id;
+    }
+
+    /** A smooth ring (donut) in the accessory colour on a transparent texture, drawn on the
+     *  disc's up + down faces of the box unwrap so the halo is a clean circle. */
+    private static Identifier ringTex(int argb) {
+        if (ringTexId != null && ringArgb == argb) return ringTexId;
+        final int W = 48, texW = 192, texH = 64;
+        NativeImage img = new NativeImage(texW, texH, false);
+        for (int y = 0; y < texH; y++) for (int x = 0; x < texW; x++) img.setPixel(x, y, 0);   // transparent
+        double outer = W * 0.46, inner = W * 0.30, cy = W / 2.0;
+        double[] cxs = {W + W / 2.0, 2.0 * W + W / 2.0};   // up-face and down-face centres
+        for (double cx : cxs) {
+            for (int y = 0; y < W; y++) {
+                for (int x = (int) (cx - W / 2.0); x < (int) (cx + W / 2.0); x++) {
+                    double dx = x + 0.5 - cx, dy = y + 0.5 - cy;
+                    double d = Math.sqrt(dx * dx + dy * dy);
+                    if (d <= outer && d >= inner) img.setPixel(x, y, argb);
+                }
+            }
+        }
+        Identifier id = Identifier.fromNamespaceAndPath("lumina", "textures/entity/accessory_ring");
+        Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(() -> "lumina_ring", img));
+        ringArgb = argb;
+        ringTexId = id;
         return id;
     }
 
@@ -106,30 +141,16 @@ public final class LuminaAccessories {
         return wings = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
     }
 
-    /** A halo: a real TORUS (donut) — a ring with a round tube cross-section, built from small
-     *  cubes around both the main ring and the tube, so it reads as a smooth 3D ring (glows
-     *  full-bright, visible from every angle). */
+    /** A thin flat disc (modelled big, scaled at render) carrying the smooth ring texture —
+     *  a real clean circle, like the shop halo. */
     private static EntityModel<AvatarRenderState> halo() {
         if (halo != null) return halo;
+        final int W = 48;
         MeshDefinition md = new MeshDefinition();
-        CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
-        int major = 48, minor = 6;             // segments around the ring / around the tube
-        double R = 4.3, r = 0.55, sz = 0.34, baseY = -15;
-        for (int i = 0; i < major; i++) {
-            double th = i / (double) major * Math.PI * 2;
-            double ct = Math.cos(th), st = Math.sin(th);
-            for (int j = 0; j < minor; j++) {
-                double ph = j / (double) minor * Math.PI * 2;
-                double rr = R + r * Math.cos(ph);
-                float cx = (float) (ct * rr);
-                float cz = (float) (st * rr);
-                float cy = (float) (baseY + r * Math.sin(ph));
-                c.addBox(cx - (float) (sz / 2), cy - (float) (sz / 2), cz - (float) (sz / 2),
-                        (float) sz, (float) sz, (float) sz);
-            }
-        }
+        CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0)
+                .addBox(-W / 2f, -0.5f, -W / 2f, (float) W, 1.0f, (float) W);
         md.getRoot().addOrReplaceChild("halo", c, PartPose.ZERO);
-        return halo = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
+        return halo = wrap(LayerDefinition.create(md, 192, 64).bakeRoot());
     }
 
     private static EntityModel<AvatarRenderState> aura() {
