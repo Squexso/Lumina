@@ -63,6 +63,20 @@ public final class SkinService {
         return "https://mc-heads.net/body/" + uuid.replace("-", "") + "/128";
     }
 
+    /**
+     * A high-quality, slightly-angled 3D body render for the wardrobe hero preview.
+     * Falls back to {@link #bodyRenderUrl} if this service is unavailable.
+     */
+    public static String heroRenderUrl(String uuid) {
+        return "https://starlightskins.lunareclipse.studio/render/default/"
+                + uuid.replace("-", "") + "/full";
+    }
+
+    /** Raw 64×64 skin texture URL (for the 3D model), keyed by UUID. */
+    public static String skinTextureUrl(String uuid) {
+        return "https://mc-heads.net/skin/" + uuid.replace("-", "");
+    }
+
     public static byte[] download(String url) throws IOException, InterruptedException {
         HttpRequest req = HttpRequest.newBuilder(URI.create(url))
                 .header("User-Agent", "LuminaMC-Launcher/0.1.0").GET().build();

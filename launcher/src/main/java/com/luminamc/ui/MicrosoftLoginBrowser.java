@@ -38,6 +38,15 @@ public final class MicrosoftLoginBrowser {
     }
 
     public void show(Window owner, Consumer<Account> onSuccess, Consumer<String> onError) {
+        show(owner, false, onSuccess, onError);
+    }
+
+    /**
+     * @param freshLogin when {@code true} (adding a second/third account), the browser
+     *                   is signed out of Microsoft first so a <em>different</em> account
+     *                   can be chosen instead of silently reusing the existing session.
+     */
+    public void show(Window owner, boolean freshLogin, Consumer<Account> onSuccess, Consumer<String> onError) {
         Stage stage = buildStage(owner);
 
         ProgressIndicator spinner = new ProgressIndicator(-1);
@@ -131,7 +140,20 @@ public final class MicrosoftLoginBrowser {
                                 copyCodeBtn.setText("✓  Copied!");
                             });
                             openLinkBtn.setOnAction(ev -> MicrosoftAuth.openBrowser(verifyUri));
-                            MicrosoftAuth.openBrowser(verifyUri);   // auto-open once
+
+                            if (freshLogin) {
+                                // Adding another account: sign the browser out first so the
+                                // verification page asks for a DIFFERENT account.
+                                statusLabel.setText("Add a different account");
+                                detailLabel.setText("We signed you out of Microsoft in your browser so you can pick "
+                                        + "another account. Click \"Open login page\", enter the code, then sign in "
+                                        + "with the account you want to ADD.");
+                                openLinkBtn.setText("🌐  Open login page →");
+                                openLinkBtn.getStyleClass().setAll("accent-button");
+                                MicrosoftAuth.openBrowser(MicrosoftAuth.LOGOUT_URL);
+                            } else {
+                                MicrosoftAuth.openBrowser(verifyUri);   // auto-open once
+                            }
                         }));
 
                 Platform.runLater(() -> { stage.close(); onSuccess.accept(account); });

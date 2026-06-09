@@ -147,8 +147,19 @@ public final class LaunchService {
             installer.fetchAll(inst, rv, Math.max(1, ctx.config.downloadThreads), listener);
 
             // Auto-install the matching LuminaMC client mod (Right-Shift panel) for modded instances.
-            if (com.luminamc.instance.LuminaClientInstaller.install(inst))
+            // Only the supported Minecraft version gets it; on any other version it's removed so an
+            // incompatible jar can't stop the game from launching.
+            if (com.luminamc.instance.LuminaClientInstaller.install(inst)) {
                 fx(cb, c -> c.log("Installed LuminaMC client mod for " + inst.loader));
+            } else if (inst.loader != com.luminamc.instance.ModLoader.VANILLA
+                    && !com.luminamc.instance.LuminaClientInstaller.SUPPORTED_MC.equals(inst.mcVersion)) {
+                fx(cb, c -> c.log("LuminaMC client mod targets Minecraft "
+                        + com.luminamc.instance.LuminaClientInstaller.SUPPORTED_MC
+                        + " — skipped (and removed) for " + inst.mcVersion + " so it launches cleanly."));
+            }
+
+            // Sync the equipped Lumina Cape (from the shop) into the in-game mod config.
+            com.luminamc.game.LuminaCosmetics.writeEquipped(inst, ctx.config.equippedCape);
 
             fx(cb, c -> { c.progress(1.0, "Ready"); c.phase("Launching Minecraft…"); });
             List<String> captured = Collections.synchronizedList(new CopyOnWriteArrayList<>());
@@ -164,11 +175,13 @@ public final class LaunchService {
 
             int code = process.waitFor();
 
-            // Accumulate total playtime across all sessions.
+            // Accumulate total playtime across all sessions, and convert it into
+            // Lumina Tokens (1 per minute) for the shop.
             long played = System.currentTimeMillis() - sessionStart;
             if (played > 0) {
                 ctx.config.totalPlayMillis += played;
                 ctx.config.save();
+                new com.luminamc.shop.TokenEconomy(ctx.config).sync(ctx.config.totalPlayMillis);
             }
 
             CrashReporter.Report report = new CrashReporter().handleExit(inst, code, captured);

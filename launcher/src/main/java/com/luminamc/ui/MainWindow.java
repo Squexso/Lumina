@@ -42,6 +42,7 @@ public final class MainWindow {
         sidebar = new Sidebar(ctx, new Sidebar.Nav() {
             @Override public void home()          { showHome(); }
             @Override public void skins()         { showSkins(); }
+            @Override public void shop()          { showShop(); }
             @Override public void settings()      { showSettings(); }
             @Override public void newInstance()   { newInstance(); }
             @Override public void account()       { accounts(); }
@@ -77,34 +78,55 @@ public final class MainWindow {
 
     // ── home (instance grid) ─────────────────────────────────────────────
 
+    /** Swaps the centre content with a soft fade + slide-up animation. */
+    private void setContent(Node node) {
+        centerHost.getChildren().setAll(node);
+        node.setOpacity(0);
+        node.setTranslateY(10);
+        javafx.animation.FadeTransition fade =
+                new javafx.animation.FadeTransition(javafx.util.Duration.millis(220), node);
+        fade.setFromValue(0); fade.setToValue(1);
+        javafx.animation.TranslateTransition slide =
+                new javafx.animation.TranslateTransition(javafx.util.Duration.millis(280), node);
+        slide.setFromY(10); slide.setToY(0);
+        slide.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+        new javafx.animation.ParallelTransition(fade, slide).play();
+    }
+
     private void showHome() {
         current = null;
         sidebar.setActive("home");
         sidebar.refresh();          // keep the "recent" list and account chip current
         gridPanel.rebuild();
-        centerHost.getChildren().setAll(gridPanel);
+        setContent(gridPanel);
     }
 
     private void showSkins() {
         sidebar.setActive("skins");
         current = null;
-        centerHost.getChildren().setAll(new SkinsPanel(ctx));
+        setContent(new SkinsPanel(ctx));
+    }
+
+    private void showShop() {
+        sidebar.setActive("shop");
+        current = null;
+        setContent(new ShopPanel(ctx, sidebar::refreshTokens));
     }
 
     private void showSettings() {
         sidebar.setActive("settings");
         current = null;
-        centerHost.getChildren().setAll(new GlobalSettingsDialog(ctx).asPanel());
+        setContent(new GlobalSettingsDialog(ctx).asPanel());
     }
 
     private void showGlobalScreens() {
         sidebar.setActive(null);
-        centerHost.getChildren().setAll(new GlobalScreensPanel(ctx));
+        setContent(new GlobalScreensPanel(ctx));
     }
 
     private void showCrashLogs() {
         sidebar.setActive(null);
-        centerHost.getChildren().setAll(new CrashLogsPanel(ctx));
+        setContent(new CrashLogsPanel(ctx));
     }
 
     // ── instance detail (tabs) ───────────────────────────────────────────
@@ -169,7 +191,7 @@ public final class MainWindow {
 
         VBox detail = new VBox(headerRow, tabBar, scroll);
         VBox.setVgrow(scroll, Priority.ALWAYS);
-        centerHost.getChildren().setAll(detail);
+        setContent(detail);
     }
 
     private void onInstanceDeleted() {

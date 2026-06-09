@@ -29,10 +29,10 @@ public class LuminaTitleScreen extends Screen {
     private static final int BTN_H = 22;
     private static final int LOGO_SZ = 88;
 
-    /** Logo texture: assets/lumina/textures/gui/logo.png (1000 × 1000 px). */
+    /** Logo texture: assets/lumina/textures/gui/logo.png (256 × 256 px — Lumina crystal). */
     private static final Identifier LOGO     = Identifier.of("lumina", "textures/gui/logo.png");
     /** Actual pixel dimensions of logo.png — used for correct UV mapping. */
-    private static final float      LOGO_TEX = 1000f;
+    private static final float      LOGO_TEX = 256f;
 
     // Total content block height so we can centre it.
     private static final int CONTENT_H = LOGO_SZ + 6 + 10 + 10 + 20 + 22 + 25 + 22 + 25 + 22 + 25 + 22 + 33 + 22;

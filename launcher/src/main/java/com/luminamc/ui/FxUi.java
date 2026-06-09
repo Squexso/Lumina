@@ -43,6 +43,27 @@ public final class FxUi {
         return r;
     }
 
+    /** Adds a subtle hover lift + violet glow to any node (buttons, cards). */
+    public static void hoverPop(javafx.scene.Node node) {
+        node.setCursor(javafx.scene.Cursor.HAND);
+        javafx.scene.effect.DropShadow glow = new javafx.scene.effect.DropShadow(0, javafx.scene.paint.Color.web("#8B5CF6"));
+        node.setOnMouseEntered(e -> {
+            node.setEffect(glow);
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(120), node);
+            st.setToX(1.04); st.setToY(1.04); st.play();
+            new javafx.animation.Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.millis(150),
+                    new javafx.animation.KeyValue(glow.radiusProperty(), 16))).play();
+        });
+        node.setOnMouseExited(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(120), node);
+            st.setToX(1.0); st.setToY(1.0); st.play();
+            javafx.animation.Timeline g = new javafx.animation.Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.millis(150),
+                    new javafx.animation.KeyValue(glow.radiusProperty(), 0)));
+            g.setOnFinished(ev -> node.setEffect(null));
+            g.play();
+        });
+    }
+
     public static VBox card(javafx.scene.Node... children) {
         VBox box = new VBox(10, children);
         box.getStyleClass().add("card");

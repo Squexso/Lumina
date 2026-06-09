@@ -8,7 +8,9 @@ public enum FeatureCategory {
     MINING("Mine"),
     VISUAL("Visual"),
     CHAT("Chat"),
-    MISC("Misc");
+    MISC("Misc"),
+    /** Launcher-driven cosmetics (e.g. the Lumina Cape). Hidden from the panel tabs. */
+    COSMETIC("Cosmetic");
 
     public final String label;
     FeatureCategory(String label) { this.label = label; }

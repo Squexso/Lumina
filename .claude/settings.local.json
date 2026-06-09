@@ -160,7 +160,15 @@
       "Bash(curl -sL \"https://github.com/Squexso/Lumina/releases/latest/download/latest.json\")",
       "Bash(curl -sI \"https://github.com/Squexso/Lumina/releases/latest\")",
       "Bash(curl -s \"https://api.github.com/repos/Squexso/Lumina/releases/latest\")",
-      "Bash(./gradlew.bat publishRelease \"-PbaseUrl=https://github.com/Squexso/Lumina/releases/download/v0.1.1\" -q)"
+      "Bash(./gradlew.bat publishRelease \"-PbaseUrl=https://github.com/Squexso/Lumina/releases/download/v0.1.1\" -q)",
+      "Bash(./gradlew.bat bundleClientMods -q)",
+      "Bash(find . -path '*decompiled*' -name '*.jar' 2>/dev/null | head; echo \"---sources---\"; find / -name 'CapeLayer.java' 2>/dev/null | head; echo \"---loom---\"; ls ~/.gradle/caches/fabric-loom 2>/dev/null | head)",
+      "Bash(seq 1 130)",
+      "Bash(grep -qE 'CAPESHOT done|BUILD FAILED|FAILURE:|error:' /c/Users/lochd/AppData/Local/Temp/claude/C--Users-lochd-IdeaProjects-Lumina/b81fe544-4d94-4592-ac5c-e6de06628128/tasks/bc8yvcfbz.output)",
+      "Bash(sleep 2)",
+      "Bash(echo RESULT:)",
+      "Bash(grep -nE 'CAPESHOT done|BUILD FAILED|FAILURE:|error:' /c/Users/lochd/AppData/Local/Temp/claude/C--Users-lochd-IdeaProjects-Lumina/b81fe544-4d94-4592-ac5c-e6de06628128/tasks/bc8yvcfbz.output)",
+      "PowerShell($exe = \"$env:LOCALAPPDATA\\\\Programs\\\\LuminaMC\\\\LuminaMC.exe\"; if \\(Test-Path $exe\\) { Start-Process $exe; \"Gestartet: $exe\" } else { \"NICHT GEFUNDEN: $exe\" })"
     ]
   }
 }

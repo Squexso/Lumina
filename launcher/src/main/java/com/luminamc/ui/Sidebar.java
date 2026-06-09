@@ -22,6 +22,7 @@ public final class Sidebar extends VBox {
     public interface Nav {
         void home();
         void skins();
+        void shop();
         void settings();
         void newInstance();
         void account();
@@ -38,8 +39,11 @@ public final class Sidebar extends VBox {
     private final Label accountState = new Label();
 
     private final Button homeBtn = navItem("◳", "INSTANCES", () -> select("home"));
-    private final Button skinsBtn = navItem("🧊", "SKINS", () -> select("skins"));
+    private final Button skinsBtn = navItem("🧥", "WARDROBE", () -> select("skins"));
+    private final Button shopBtn = navItem("✦", "SHOP", () -> select("shop"));
     private final Button settingsBtn = navItem("⚙", "SETTINGS", () -> select("settings"));
+
+    private final Label tokenBalance = new Label("0");
 
     public Sidebar(AppContext ctx, Nav nav) {
         this.ctx = ctx;
@@ -54,6 +58,7 @@ public final class Sidebar extends VBox {
         getChildren().addAll(
                 brand(),
                 accountSection(),
+                tokenSection(),
                 navSection(),
                 pinnedSection(),
                 recentSection(),
@@ -61,6 +66,7 @@ public final class Sidebar extends VBox {
                 quickLinks());
 
         refreshAccount();
+        refreshTokens();
         populatePinned();
         populateRecent();
         setActive("home");
@@ -85,6 +91,21 @@ public final class Sidebar extends VBox {
         }
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(4, 0, 6, 0));
+
+        // Gentle violet glow that breathes around the logo.
+        javafx.scene.effect.DropShadow glow = new javafx.scene.effect.DropShadow();
+        glow.setColor(javafx.scene.paint.Color.web("#8B5CF6"));
+        glow.setRadius(12);
+        box.setEffect(glow);
+        javafx.animation.Timeline pulse = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.ZERO,
+                        new javafx.animation.KeyValue(glow.radiusProperty(), 10)),
+                new javafx.animation.KeyFrame(javafx.util.Duration.seconds(2.4),
+                        new javafx.animation.KeyValue(glow.radiusProperty(), 28)));
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        pulse.play();
+
         return box;
     }
 
@@ -115,6 +136,34 @@ public final class Sidebar extends VBox {
         chip.setOnMouseClicked(e -> nav.account());
 
         return new VBox(8, headerRow, chip);
+    }
+
+    // ── token wallet ─────────────────────────────────────────────────────
+
+    private HBox tokenSection() {
+        Label coin = new Label("✦");
+        coin.setStyle("-fx-text-fill: #FACC15; -fx-font-size: 15px;");
+        tokenBalance.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+        Label unit = new Label("Tokens");
+        unit.setStyle("-fx-text-fill: #C4B5FD; -fx-font-size: 11px;");
+        Label go = new Label("Shop ›");
+        go.setStyle("-fx-text-fill: #C4B5FD; -fx-font-size: 11px;");
+
+        HBox chip = new HBox(7, coin, tokenBalance, unit, FxUi.hgrow(), go);
+        chip.setAlignment(Pos.CENTER_LEFT);
+        chip.setPadding(new Insets(8, 12, 8, 12));
+        chip.setStyle("-fx-background-color: linear-gradient(to right, #2E1065, #4C1D95);"
+                + " -fx-background-radius: 12; -fx-border-color: #7C3AED; -fx-border-radius: 12;");
+        chip.setOnMouseClicked(e -> select("shop"));
+        Tooltip.install(chip, new Tooltip("Open the Lumina shop"));
+        FxUi.hoverPop(chip);
+        return chip;
+    }
+
+    /** Refreshes the sidebar token balance from config (call after earning/spending). */
+    public void refreshTokens() {
+        long bal = new com.luminamc.shop.TokenEconomy(ctx.config).balance();
+        tokenBalance.setText(String.format("%,d", bal));
     }
 
     // ── pinned ───────────────────────────────────────────────────────────
@@ -200,7 +249,7 @@ public final class Sidebar extends VBox {
     private VBox navSection() {
         Label header = new Label("LIBRARY");
         header.getStyleClass().add("nav-header");
-        VBox box = new VBox(4, header, homeBtn, skinsBtn, settingsBtn);
+        VBox box = new VBox(4, header, homeBtn, skinsBtn, shopBtn, settingsBtn);
         box.setPadding(new Insets(4, 0, 0, 0));
         return box;
     }
@@ -210,6 +259,7 @@ public final class Sidebar extends VBox {
         switch (key) {
             case "home"     -> nav.home();
             case "skins"    -> nav.skins();
+            case "shop"     -> nav.shop();
             case "settings" -> nav.settings();
         }
     }
@@ -218,6 +268,7 @@ public final class Sidebar extends VBox {
     public void setActive(String key) {
         homeBtn.pseudoClassStateChanged(ACTIVE, "home".equals(key));
         skinsBtn.pseudoClassStateChanged(ACTIVE, "skins".equals(key));
+        shopBtn.pseudoClassStateChanged(ACTIVE, "shop".equals(key));
         settingsBtn.pseudoClassStateChanged(ACTIVE, "settings".equals(key));
     }
 
@@ -268,6 +319,8 @@ public final class Sidebar extends VBox {
                 + " -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 6 0 6 0;");
         feedback.setOnAction(e -> openUrl(ctx.config.discordInviteUrl));
 
+        FxUi.hoverPop(discord);
+        FxUi.hoverPop(feedback);
         return new VBox(8, header, row, discord, feedback);
     }
 
@@ -291,13 +344,14 @@ public final class Sidebar extends VBox {
         box.getStyleClass().add("quicklink-card");
         box.setMaxWidth(Double.MAX_VALUE);
         box.setOnMouseClicked(e -> action.run());
+        FxUi.hoverPop(box);
         return box;
     }
 
     // ── account rendering ────────────────────────────────────────────────
 
-    /** Refreshes the account chip + pinned + recent lists. */
-    public void refresh() { refreshAccount(); populatePinned(); populateRecent(); }
+    /** Refreshes the account chip + token balance + pinned + recent lists. */
+    public void refresh() { refreshAccount(); refreshTokens(); populatePinned(); populateRecent(); }
 
     public void refreshAccount() {
         Account a = ctx.auth.active();

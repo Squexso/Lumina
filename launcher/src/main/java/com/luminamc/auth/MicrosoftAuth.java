@@ -40,6 +40,13 @@ public final class MicrosoftAuth {
     private static final String DEVICE_CODE_URL = "https://login.live.com/oauth20_connect.srf";
     private static final String TOKEN_URL       = "https://login.live.com/oauth20_token.srf";
 
+    /**
+     * Signs the browser out of the current Microsoft account. Opening this before a
+     * new device-code sign-in forces the verification page to ask for credentials
+     * again, so a <em>different</em> account can be added (multi-account support).
+     */
+    public static final String LOGOUT_URL = "https://login.live.com/logout.srf";
+
     // Xbox Live / Minecraft endpoints.
     private static final String XBL_URL    = "https://user.auth.xboxlive.com/user/authenticate";
     private static final String XSTS_URL   = "https://xsts.auth.xboxlive.com/xsts/authorize";

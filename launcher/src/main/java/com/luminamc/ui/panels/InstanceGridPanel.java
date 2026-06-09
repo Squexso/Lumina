@@ -160,6 +160,25 @@ public final class InstanceGridPanel extends BorderPane {
             if (e.getTarget() instanceof javafx.scene.Node n && isInsideButton(n)) return;
             onOpen.accept(inst);
         });
+
+        // Hover: subtle lift + violet glow.
+        javafx.scene.effect.DropShadow lift = new javafx.scene.effect.DropShadow(0, javafx.scene.paint.Color.web("#8B5CF6"));
+        card.setCursor(javafx.scene.Cursor.HAND);
+        card.setOnMouseEntered(e -> {
+            card.setEffect(lift);
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(140), card);
+            st.setToX(1.025); st.setToY(1.025); st.play();
+            new javafx.animation.Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.millis(160),
+                    new javafx.animation.KeyValue(lift.radiusProperty(), 22))).play();
+        });
+        card.setOnMouseExited(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(140), card);
+            st.setToX(1.0); st.setToY(1.0); st.play();
+            javafx.animation.Timeline g = new javafx.animation.Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.millis(160),
+                    new javafx.animation.KeyValue(lift.radiusProperty(), 0)));
+            g.setOnFinished(ev -> card.setEffect(null));
+            g.play();
+        });
         return card;
     }
 
@@ -317,6 +336,7 @@ public final class InstanceGridPanel extends BorderPane {
         // Clean-caches button right next to the disk usage.
         Button clean = new Button("🧹 Clean");
         clean.getStyleClass().add("ghost-button");
+        com.luminamc.ui.FxUi.hoverPop(clean);
         clean.setOnAction(e -> {
             clean.setDisable(true);
             spaceLabel.setText("Cleaning caches…");

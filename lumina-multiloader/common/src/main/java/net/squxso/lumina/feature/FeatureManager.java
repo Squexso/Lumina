@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphics;
 import net.squxso.lumina.feature.impl.*;
 
@@ -44,6 +45,18 @@ public final class FeatureManager {
         FEATURES.add(new KeystrokesHudFeature());
         FEATURES.add(new CpsHudFeature());
         FEATURES.add(new ArmorPotionHudFeature());
+        FEATURES.add(new ClockHudFeature());
+        FEATURES.add(new DayTimeHudFeature());
+        FEATURES.add(new BiomeHudFeature());
+        FEATURES.add(new LightLevelHudFeature());
+        FEATURES.add(new NetherCoordsHudFeature());
+        FEATURES.add(new ZoomFeature());
+        FEATURES.add(new BrightnessFeature());
+        FEATURES.add(new FullbrightFeature());
+        FEATURES.add(new NoBobbingFeature());
+        FEATURES.add(new ChatTimestampsFeature());
+        // Cosmetics — launcher-driven, hidden from the panel tabs (see COSMETIC category).
+        FEATURES.add(new CapeCosmeticFeature());
         // Combat tab — fair, informational/timing aids (no automation).
         FEATURES.add(new AimAssistFeature());
         FEATURES.add(new TargetInfoFeature());
@@ -54,6 +67,64 @@ public final class FeatureManager {
         FEATURES.add(new SpeedHudFeature());
         // Mining tab — fair info (no X-ray / block hiding).
         FEATURES.add(new DepthHudFeature());
+        FEATURES.add(new TextHudFeature("mining_coords", "Mining Coords", "Compact X / Y / Z for branch mining.", FeatureCategory.MINING, 6, 150, MiningTexts::coords));
+        FEATURES.add(new TextHudFeature("bedrock_dist", "Bedrock Distance", "Blocks down to bedrock (Y -64).", FeatureCategory.MINING, 6, 162, MiningTexts::bedrock));
+        FEATURES.add(new TextHudFeature("ore_sheet", "Ore Cheat Sheet", "Best Y-levels for every ore.", FeatureCategory.MINING, 6, 174, MiningTexts::oreSheet));
+        FEATURES.add(new TextHudFeature("lava_warn", "Lava Warning", "Warns at lava-pool depth.", FeatureCategory.MINING, 6, 186, MiningTexts::lava));
+        FEATURES.add(new TextHudFeature("tool_dura", "Tool Durability", "Main-hand tool durability + low warning.", FeatureCategory.MINING, 6, 198, MiningTexts::tool));
+        FEATURES.add(new TextHudFeature("block_info", "Block Info", "Name of the block you're looking at.", FeatureCategory.MINING, 6, 210, MiningTexts::block));
+        FEATURES.add(new TextHudFeature("inv_full", "Inventory Warning", "Warns when your inventory is (nearly) full.", FeatureCategory.MINING, 6, 222, MiningTexts::inventory));
+        FEATURES.add(new TextHudFeature("spawn_warn", "Spawn Warning", "Warns when light is low enough for mobs.", FeatureCategory.MINING, 6, 234, MiningTexts::spawn));
+        FEATURES.add(new TextHudFeature("tunnel_align", "Tunnel Aligner", "Facing + angle to dig straight tunnels.", FeatureCategory.MINING, 6, 246, MiningTexts::tunnel));
+
+        // Misc tab — fair client tweaks via vanilla options (saved/restored on toggle).
+        FEATURES.add(new DoubleOptionFeature("no_hurtcam", "No Hurt Camera", "No camera tilt when you take damage.", FeatureCategory.MISC, Options::damageTiltStrength, 0.0));
+        FEATURES.add(new DoubleOptionFeature("no_nausea", "No Nausea", "Remove the nausea / portal screen warp.", FeatureCategory.MISC, Options::screenEffectScale, 0.0));
+        FEATURES.add(new DoubleOptionFeature("stable_fov", "Stable FOV", "FOV stays put during speed effects.", FeatureCategory.MISC, Options::fovEffectScale, 0.0));
+        FEATURES.add(new BoolOptionFeature("no_vignette", "No Vignette", "Remove the dark screen-edge vignette.", FeatureCategory.MISC, Options::vignette, false));
+        FEATURES.add(new BoolOptionFeature("no_shadows", "No Entity Shadows", "Hide the round entity shadows.", FeatureCategory.MISC, Options::entityShadows, false));
+        FEATURES.add(new BoolOptionFeature("no_autojump", "Auto-Jump Off", "Disable auto-jumping over blocks.", FeatureCategory.MISC, Options::autoJump, false));
+        FEATURES.add(new BoolOptionFeature("no_lightning_flash", "No Lightning Flash", "Skip the bright lightning flash.", FeatureCategory.MISC, Options::hideLightningFlash, true));
+
+        // Chat tab — fair chat tweaks.
+        FEATURES.add(new DoubleOptionFeature("no_chat_bg", "No Chat Background", "Make the chat background transparent.", FeatureCategory.CHAT, Options::textBackgroundOpacity, 0.0));
+        FEATURES.add(new DoubleOptionFeature("compact_chat", "Compact Chat", "Tighter chat line spacing.", FeatureCategory.CHAT, Options::chatLineSpacing, 0.0));
+        FEATURES.add(new DoubleOptionFeature("wide_chat", "Wide Chat", "Maximise the chat width.", FeatureCategory.CHAT, Options::chatWidth, 1.0));
+        FEATURES.add(new DoubleOptionFeature("tall_chat", "Tall Chat", "Maximise the focused chat height.", FeatureCategory.CHAT, Options::chatHeightFocused, 1.0));
+        FEATURES.add(new BoolOptionFeature("no_suggestions", "No Command Suggestions", "Hide the command auto-suggestions.", FeatureCategory.CHAT, Options::autoSuggestions, false));
+        FEATURES.add(new BoolOptionFeature("no_chat_links", "No Chat Links", "Don't turn URLs into clickable links.", FeatureCategory.CHAT, Options::chatLinks, false));
+        FEATURES.add(new BoolOptionFeature("no_link_prompt", "No Link Warning", "Open links without the confirm prompt.", FeatureCategory.CHAT, Options::chatLinksPrompt, false));
+        FEATURES.add(new BoolOptionFeature("no_chat_colors", "No Chat Colors", "Strip color codes from chat.", FeatureCategory.CHAT, Options::chatColors, false));
+        FEATURES.add(new BoolOptionFeature("chat_drafts", "Save Chat Drafts", "Keep your half-typed message when closing chat.", FeatureCategory.CHAT, Options::saveChatDrafts, true));
+
+        // Combat tab — fair stat readouts (no automation).
+        FEATURES.add(new TextHudFeature("hp_hud", "Health", "Your exact health.", FeatureCategory.COMBAT, 6, 60, CombatTexts::health));
+        FEATURES.add(new TextHudFeature("hunger_hud", "Hunger", "Your food level.", FeatureCategory.COMBAT, 6, 72, CombatTexts::hunger));
+        FEATURES.add(new TextHudFeature("sat_hud", "Saturation", "Hidden saturation value.", FeatureCategory.COMBAT, 6, 84, CombatTexts::saturation));
+        FEATURES.add(new TextHudFeature("armor_hud", "Armor Points", "Total armour points.", FeatureCategory.COMBAT, 6, 96, CombatTexts::armor));
+        FEATURES.add(new TextHudFeature("held_hud", "Held Item", "Your main-hand item + count.", FeatureCategory.COMBAT, 6, 108, CombatTexts::held));
+        FEATURES.add(new TextHudFeature("xp_hud", "XP Level", "Your experience level.", FeatureCategory.COMBAT, 6, 120, CombatTexts::xp));
+
+        // Movement tab — fair readouts + vanilla movement toggles.
+        FEATURES.add(new TextHudFeature("fall_hud", "Fall Distance", "How far you're falling.", FeatureCategory.MOVEMENT, 6, 60, MovementTexts::fall));
+        FEATURES.add(new TextHudFeature("vspeed_hud", "Vertical Speed", "Your up/down speed.", FeatureCategory.MOVEMENT, 6, 72, MovementTexts::vspeed));
+        FEATURES.add(new TextHudFeature("sprint_hud", "Sprint Status", "Shows when you're sprinting.", FeatureCategory.MOVEMENT, 6, 84, MovementTexts::sprint));
+        FEATURES.add(new TextHudFeature("sneak_hud", "Sneak Status", "Shows when you're sneaking.", FeatureCategory.MOVEMENT, 6, 96, MovementTexts::sneak));
+        FEATURES.add(new TextHudFeature("heading_hud", "Heading", "Facing angle for straight lines.", FeatureCategory.MOVEMENT, 6, 108, MovementTexts::heading));
+        FEATURES.add(new BoolOptionFeature("toggle_sneak", "Toggle Sneak", "Sneak is a toggle, not hold-to-sneak.", FeatureCategory.MOVEMENT, Options::toggleCrouch, true));
+        FEATURES.add(new BoolOptionFeature("toggle_sprint_key", "Sprint = Toggle", "Sprint key is a toggle, not hold.", FeatureCategory.MOVEMENT, Options::toggleSprint, true));
+        FEATURES.add(new BoolOptionFeature("minecart_rotate", "Rotate with Minecart", "Camera follows minecart turns.", FeatureCategory.MOVEMENT, Options::rotateWithMinecart, true));
+
+        // Visual tab — fair rendering tweaks.
+        FEATURES.add(new DoubleOptionFeature("no_glint", "No Enchant Glint", "Remove the enchantment shimmer.", FeatureCategory.VISUAL, Options::glintStrength, 0.0));
+        FEATURES.add(new DoubleOptionFeature("static_glint", "Static Glint", "Stop the glint from moving.", FeatureCategory.VISUAL, Options::glintSpeed, 0.0));
+        FEATURES.add(new DoubleOptionFeature("less_darkness", "Less Darkness", "Reduce the Warden darkness effect.", FeatureCategory.VISUAL, Options::darknessEffectScale, 0.0));
+        FEATURES.add(new BoolOptionFeature("high_contrast", "High Contrast UI", "High-contrast interface.", FeatureCategory.VISUAL, Options::highContrast, true));
+        FEATURES.add(new BoolOptionFeature("vsync_off", "VSync Off", "Disable VSync (uncap FPS).", FeatureCategory.VISUAL, Options::enableVsync, false));
+        FEATURES.add(new BoolOptionFeature("no_splash", "No Splash Text", "Hide the yellow title splash.", FeatureCategory.VISUAL, Options::hideSplashTexts, true));
+        FEATURES.add(new BoolOptionFeature("cutout_leaves", "Cutout Leaves", "Sharper, see-through leaf edges.", FeatureCategory.VISUAL, Options::cutoutLeaves, true));
+        FEATURES.add(new BoolOptionFeature("unicode_font", "Unicode Font", "Force the unicode font.", FeatureCategory.VISUAL, Options::forceUnicodeFont, true));
+        FEATURES.add(new BoolOptionFeature("dark_loading", "Dark Loading Screen", "Dark Mojang loading screen.", FeatureCategory.VISUAL, Options::darkMojangStudiosBackground, true));
     }
 
     public static List<Feature> all() {

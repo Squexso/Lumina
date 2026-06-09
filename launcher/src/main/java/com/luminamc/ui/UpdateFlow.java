@@ -46,19 +46,19 @@ public final class UpdateFlow {
     // ── prompt → download → relaunch ────────────────────────────────────────
 
     private static void prompt(Window owner, AppContext ctx, SelfUpdater.UpdateInfo info) {
-        String notes = (info.notes() == null || info.notes().isBlank()) ? "" : "\n\nWas ist neu:\n" + info.notes();
+        String notes = (info.notes() == null || info.notes().isBlank()) ? "" : "\n\nWhat's new:\n" + info.notes();
         boolean ok = LuminaDialog.confirm(owner,
-                "Update verfügbar — " + info.version(),
-                "Eine neue Version von LuminaMC (" + info.version() + ") ist verfügbar."
-                        + notes + "\n\nJetzt herunterladen und installieren? LuminaMC startet danach automatisch neu.");
+                "Update available — " + info.version(),
+                "A new version of LuminaMC (" + info.version() + ") is available."
+                        + notes + "\n\nDownload and install it now? LuminaMC will restart automatically afterwards.");
         if (ok) apply(owner, ctx, info);
     }
 
     private static void apply(Window owner, AppContext ctx, SelfUpdater.UpdateInfo info) {
         Stage progress = new Stage(StageStyle.TRANSPARENT);
-        Label title = new Label("✦  Aktualisiere LuminaMC");
+        Label title = new Label("✦  Updating LuminaMC");
         title.getStyleClass().add("dialog-title");
-        Label sub = new Label("Lädt Version " + info.version() + " herunter…");
+        Label sub = new Label("Downloading version " + info.version() + "…");
         sub.getStyleClass().add("dialog-message");
         ProgressBar bar = new ProgressBar();
         bar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
@@ -91,7 +91,7 @@ public final class UpdateFlow {
                 boolean staged = new SelfUpdater(ctx.config.updateFeedUrl).downloadAndStage(info, bytes -> {});
                 Platform.runLater(() -> {
                     if (staged) {
-                        sub.setText("Fertig — LuminaMC startet neu…");
+                        sub.setText("Done — LuminaMC is restarting…");
                         // Hard exit after a short beat: halt() skips JVM shutdown hooks, so the
                         // system-tray (AWT) and Discord-IPC threads can never block the jar swap.
                         // The detached swap script waits for this process to vanish, then relaunches.
@@ -101,17 +101,17 @@ public final class UpdateFlow {
                         }, "luminamc-update-halt").start();
                     } else {
                         progress.close();
-                        LuminaDialog.info(owner, "Update bereit",
-                                "Im Entwicklungs-/Gradle-Modus kann sich die App nicht selbst ersetzen.\n\n"
-                                        + "Lade die neue Version manuell:\n" + info.downloadUrl()
-                                        + "\n\n(Im installierten Desktop-Programm läuft das Update automatisch.)");
+                        LuminaDialog.info(owner, "Update ready",
+                                "In dev / Gradle mode the app can't replace itself.\n\n"
+                                        + "Download the new version manually:\n" + info.downloadUrl()
+                                        + "\n\n(In the installed desktop app the update runs automatically.)");
                     }
                 });
             } catch (Exception ex) {
                 Platform.runLater(() -> {
                     progress.close();
-                    LuminaDialog.error(owner, "Update fehlgeschlagen",
-                            "Konnte das Update nicht installieren:\n" + ex.getMessage());
+                    LuminaDialog.error(owner, "Update failed",
+                            "Couldn't install the update:\n" + ex.getMessage());
                 });
             }
         }, "luminamc-update-download");

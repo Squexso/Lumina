@@ -97,15 +97,23 @@ public final class AccountDialog {
             root.getChildren().add(FxUi.card(listBox.getChildren().toArray(new javafx.scene.Node[0])));
         }
 
+        boolean haveAccounts = !ctx.auth.accounts.isEmpty();
+
         // ── Microsoft login (primary, accent) ───────────────────────────
-        Button msBtn = new Button("🔑  Sign in with Microsoft");
+        Button msBtn = new Button(haveAccounts
+                ? "🔑  Add another Microsoft account"
+                : "🔑  Sign in with Microsoft");
         msBtn.getStyleClass().add("accent-button");
         msBtn.setMaxWidth(Double.MAX_VALUE);
-        msBtn.setOnAction(e -> openEmbeddedBrowser());
+        // When accounts already exist, force a fresh sign-in so a DIFFERENT account
+        // can be chosen instead of silently reusing the current browser session.
+        msBtn.setOnAction(e -> openEmbeddedBrowser(haveAccounts));
 
-        Label msNote = FxUi.muted(
-                "Opens your browser with a real Microsoft login page — "
-                + "secure, no password stored in the launcher, no Azure setup needed.");
+        Label msNote = FxUi.muted(haveAccounts
+                ? "You can add as many accounts as you like and switch anytime. We'll sign you "
+                  + "out of Microsoft in your browser first so you can pick a different account."
+                : "Opens your browser with a real Microsoft login page — "
+                  + "secure, no password stored in the launcher, no Azure setup needed.");
 
         // ── Play offline (secondary) ─────────────────────────────────────
         Button offlineBtn = new Button("▶  Play offline");
@@ -224,10 +232,10 @@ public final class AccountDialog {
 
     // ── Microsoft embedded browser login ─────────────────────────────────
 
-    /** Opens the Microsoft login page INSIDE the launcher — no external browser. */
-    private void openEmbeddedBrowser() {
+    /** Starts the Microsoft device-code sign-in; {@code freshLogin} forces a different account. */
+    private void openEmbeddedBrowser(boolean freshLogin) {
         Window owner = stage.getOwner();
-        new MicrosoftLoginBrowser(ctx).show(owner,
+        new MicrosoftLoginBrowser(ctx).show(owner, freshLogin,
                 account -> {
                     // Success — account is ready.
                     ctx.auth.addOrReplace(account);
