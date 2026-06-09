@@ -53,28 +53,48 @@ public final class GameCapeTexture {
         ImageIO.write(img, "png", out.toFile());
     }
 
-    /** Paints the faceted Lumina crystal on the cape's back-face region (x 1..11, y 2..34). */
-    private static void drawCrystal(BufferedImage img) {
-        java.awt.Graphics2D g = img.createGraphics();
-        int[] px = {6, 9, 8, 6, 4, 3};
-        int[] py = {5, 13, 28, 32, 28, 13};
-        java.awt.Polygon gem = new java.awt.Polygon(px, py, 6);
-        // soft outer glow so it stands off any background
-        g.setColor(new java.awt.Color(0xC4, 0xB5, 0xFD, 90));
-        g.fill(new java.awt.Polygon(new int[]{6, 10, 9, 6, 3, 2}, new int[]{4, 13, 29, 33, 29, 13}, 6));
-        // faceted body: light top → deep violet bottom
-        g.setPaint(new java.awt.GradientPaint(0, 5, new java.awt.Color(0xED, 0xE9, 0xFE),
-                0, 32, new java.awt.Color(0x6D, 0x28, 0xD9)));
-        g.fill(gem);
-        // left facet highlight + centre seam for a 3D gem look
-        g.setColor(new java.awt.Color(0xF8, 0xF6, 0xFF));
-        g.drawLine(4, 15, 5, 26);
-        g.setColor(new java.awt.Color(0x4C, 0x1D, 0x95, 150));
-        g.drawLine(6, 7, 6, 30);
-        // crisp dark outline
-        g.setColor(new java.awt.Color(0x3B, 0x0E, 0x6B));
-        g.draw(gem);
+    // The exact Lumina crystal tones (mirrors CrystalLogo).
+    private static final java.awt.Color C_DEEP   = new java.awt.Color(0x5B, 0x21, 0xB6);
+    private static final java.awt.Color C_MID    = new java.awt.Color(0x7C, 0x3A, 0xED);
+    private static final java.awt.Color C_LIGHT  = new java.awt.Color(0xA7, 0x8B, 0xFA);
+    private static final java.awt.Color C_HILITE = new java.awt.Color(0xDD, 0xD6, 0xFE);
+
+    /**
+     * Paints the real Lumina crystal cluster (same facets as {@link com.luminamc.ui.components.CrystalLogo})
+     * onto the cape's back-face region. Rendered big and anti-aliased, then downscaled into the
+     * region so it's as crisp as the cape's (low) resolution allows.
+     */
+    private static void drawCrystal(BufferedImage cape) {
+        int lw = 60, lh = 200;
+        BufferedImage logo = new BufferedImage(lw, lh, BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = logo.createGraphics();
+        g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+        double sx = lw / 100.0, sy = lh / 100.0;
+        // cluster: small lower-left + tiny right crystals, then the main shard with its facets
+        g.setColor(C_DEEP);   g.fill(lpoly(sx, sy, 24, 46, 36, 58, 30, 96, 18, 92));
+        g.setColor(C_LIGHT);  g.fill(lpoly(sx, sy, 24, 46, 30, 96, 30, 64));
+        g.setColor(C_MID);    g.fill(lpoly(sx, sy, 70, 54, 82, 64, 76, 94, 66, 86));
+        g.setColor(C_MID);    g.fill(lpoly(sx, sy, 50, 2, 74, 34, 60, 92, 40, 92, 26, 34));
+        g.setColor(C_DEEP);   g.fill(lpoly(sx, sy, 50, 2, 26, 34, 40, 92, 50, 46));
+        g.setColor(C_LIGHT);  g.fill(lpoly(sx, sy, 50, 2, 74, 34, 60, 92, 50, 46));
+        g.setColor(C_HILITE); g.fill(lpoly(sx, sy, 50, 2, 44, 30, 50, 46, 53, 28));
+        g.setColor(new java.awt.Color(0x3B, 0x0E, 0x6B));   // dark outline → contrast on any cape
+        g.setStroke(new java.awt.BasicStroke(Math.max(1f, (float) sx)));
+        g.draw(lpoly(sx, sy, 50, 2, 74, 34, 60, 92, 40, 92, 26, 34));
         g.dispose();
+
+        java.awt.Graphics2D gc = cape.createGraphics();
+        gc.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        gc.drawImage(logo, 1, 2, 11, 34, 0, 0, lw, lh, null);   // into back-face region (2x tall offsets squish)
+        gc.dispose();
+    }
+
+    private static java.awt.Polygon lpoly(double sx, double sy, double... c) {
+        int n = c.length / 2;
+        int[] xs = new int[n], ys = new int[n];
+        for (int i = 0; i < n; i++) { xs[i] = (int) Math.round(c[2 * i] * sx); ys[i] = (int) Math.round(c[2 * i + 1] * sy); }
+        return new java.awt.Polygon(xs, ys, n);
     }
 
     private static int lerp(int a, int b, double f) {
