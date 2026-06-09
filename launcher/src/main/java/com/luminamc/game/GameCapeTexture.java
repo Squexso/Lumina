@@ -62,7 +62,15 @@ public final class GameCapeTexture {
      */
     private static void drawCrystal(BufferedImage cape) {
         java.awt.Graphics2D g = cape.createGraphics();   // no rendering hints → crisp, hard-edged pixels
-        g.setColor(C_MID);    g.fill(cp(50, 2, 74, 34, 60, 92, 40, 92, 26, 34));   // body
+        // small lower-left + tiny right crystals (the "cluster" of the Lumina logo)
+        g.setColor(C_DEEP);   g.fill(cp(24, 46, 36, 58, 30, 96, 18, 92));
+        g.setColor(C_LIGHT);  g.fill(cp(24, 46, 30, 96, 30, 64));
+        g.setColor(C_MID);    g.fill(cp(70, 54, 82, 64, 76, 94, 66, 86));
+        g.setColor(new java.awt.Color(0x2E, 0x0A, 0x55));
+        g.draw(cp(24, 46, 36, 58, 30, 96, 18, 92));
+        g.draw(cp(70, 54, 82, 64, 76, 94, 66, 86));
+        // main shard + facets
+        g.setColor(C_MID);    g.fill(cp(50, 2, 74, 34, 60, 92, 40, 92, 26, 34));
         g.setColor(C_DEEP);   g.fill(cp(50, 2, 26, 34, 40, 92, 50, 46));           // left facet (dark)
         g.setColor(C_LIGHT);  g.fill(cp(50, 2, 74, 34, 60, 92, 50, 46));           // right facet (light)
         g.setColor(C_HILITE); g.fill(cp(50, 2, 44, 30, 50, 46, 53, 28));           // glint
@@ -71,13 +79,13 @@ public final class GameCapeTexture {
         g.dispose();
     }
 
-    /** Maps CrystalLogo main-shard coords (x 26..74, y 2..92) to fill the cape back face (x 2..10, y 3..32). */
+    /** Maps full CrystalLogo cluster coords (x 18..82, y 2..96) to fill the cape back (x 1..11, y 2..34). */
     private static java.awt.Polygon cp(double... c) {
         int n = c.length / 2;
         int[] xs = new int[n], ys = new int[n];
         for (int i = 0; i < n; i++) {
-            xs[i] = (int) Math.round(2 + (c[2 * i] - 26) / 48.0 * 8);
-            ys[i] = (int) Math.round(3 + (c[2 * i + 1] - 2) / 90.0 * 29);
+            xs[i] = (int) Math.round(1 + (c[2 * i] - 18) * 10.0 / 64);
+            ys[i] = (int) Math.round(2 + (c[2 * i + 1] - 2) * 32.0 / 94);
         }
         return new java.awt.Polygon(xs, ys, n);
     }
