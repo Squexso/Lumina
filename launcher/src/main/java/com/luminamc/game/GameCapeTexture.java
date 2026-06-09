@@ -56,40 +56,29 @@ public final class GameCapeTexture {
     private static final java.awt.Color C_HILITE = new java.awt.Color(0xDD, 0xD6, 0xFE);
 
     /**
-     * Paints the real Lumina crystal cluster (same facets as {@link com.luminamc.ui.components.CrystalLogo})
-     * onto the cape's back-face region. Rendered big and anti-aliased, then downscaled into the
-     * region so it's as crisp as the cape's (low) resolution allows.
+     * Paints the Lumina crystal (the {@link com.luminamc.ui.components.CrystalLogo} main shard)
+     * directly onto the cape's back face, big and CRISP (no anti-aliasing / no smoothing) so it
+     * stays sharp and clearly readable on the low-res cape texture.
      */
     private static void drawCrystal(BufferedImage cape) {
-        int lw = 60, lh = 200;
-        BufferedImage logo = new BufferedImage(lw, lh, BufferedImage.TYPE_INT_ARGB);
-        java.awt.Graphics2D g = logo.createGraphics();
-        g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-        double sx = lw / 100.0, sy = lh / 100.0;
-        // cluster: small lower-left + tiny right crystals, then the main shard with its facets
-        g.setColor(C_DEEP);   g.fill(lpoly(sx, sy, 24, 46, 36, 58, 30, 96, 18, 92));
-        g.setColor(C_LIGHT);  g.fill(lpoly(sx, sy, 24, 46, 30, 96, 30, 64));
-        g.setColor(C_MID);    g.fill(lpoly(sx, sy, 70, 54, 82, 64, 76, 94, 66, 86));
-        g.setColor(C_MID);    g.fill(lpoly(sx, sy, 50, 2, 74, 34, 60, 92, 40, 92, 26, 34));
-        g.setColor(C_DEEP);   g.fill(lpoly(sx, sy, 50, 2, 26, 34, 40, 92, 50, 46));
-        g.setColor(C_LIGHT);  g.fill(lpoly(sx, sy, 50, 2, 74, 34, 60, 92, 50, 46));
-        g.setColor(C_HILITE); g.fill(lpoly(sx, sy, 50, 2, 44, 30, 50, 46, 53, 28));
-        g.setColor(new java.awt.Color(0x3B, 0x0E, 0x6B));   // dark outline → contrast on any cape
-        g.setStroke(new java.awt.BasicStroke(Math.max(1f, (float) sx)));
-        g.draw(lpoly(sx, sy, 50, 2, 74, 34, 60, 92, 40, 92, 26, 34));
+        java.awt.Graphics2D g = cape.createGraphics();   // no rendering hints → crisp, hard-edged pixels
+        g.setColor(C_MID);    g.fill(cp(50, 2, 74, 34, 60, 92, 40, 92, 26, 34));   // body
+        g.setColor(C_DEEP);   g.fill(cp(50, 2, 26, 34, 40, 92, 50, 46));           // left facet (dark)
+        g.setColor(C_LIGHT);  g.fill(cp(50, 2, 74, 34, 60, 92, 50, 46));           // right facet (light)
+        g.setColor(C_HILITE); g.fill(cp(50, 2, 44, 30, 50, 46, 53, 28));           // glint
+        g.setColor(new java.awt.Color(0x2E, 0x0A, 0x55));                           // bold dark outline
+        g.draw(cp(50, 2, 74, 34, 60, 92, 40, 92, 26, 34));
         g.dispose();
-
-        java.awt.Graphics2D gc = cape.createGraphics();
-        gc.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
-                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        gc.drawImage(logo, 1, 2, 11, 34, 0, 0, lw, lh, null);   // into back-face region (2x tall offsets squish)
-        gc.dispose();
     }
 
-    private static java.awt.Polygon lpoly(double sx, double sy, double... c) {
+    /** Maps CrystalLogo main-shard coords (x 26..74, y 2..92) to fill the cape back face (x 2..10, y 3..32). */
+    private static java.awt.Polygon cp(double... c) {
         int n = c.length / 2;
         int[] xs = new int[n], ys = new int[n];
-        for (int i = 0; i < n; i++) { xs[i] = (int) Math.round(c[2 * i] * sx); ys[i] = (int) Math.round(c[2 * i + 1] * sy); }
+        for (int i = 0; i < n; i++) {
+            xs[i] = (int) Math.round(2 + (c[2 * i] - 26) / 48.0 * 8);
+            ys[i] = (int) Math.round(3 + (c[2 * i + 1] - 2) / 90.0 * 29);
+        }
         return new java.awt.Polygon(xs, ys, n);
     }
 
