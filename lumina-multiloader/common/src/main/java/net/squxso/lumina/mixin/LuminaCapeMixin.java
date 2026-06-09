@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.entity.layers.CapeLayer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.squxso.lumina.client.LuminaAccessories;
 import net.squxso.lumina.client.LuminaCapeTextures;
 import net.squxso.lumina.feature.FeatureManager;
 import org.spongepowered.asm.mixin.Final;
@@ -35,21 +36,34 @@ public abstract class LuminaCapeMixin {
 
     @Shadow @Final private HumanoidModel<AvatarRenderState> model;
 
+    // Both the cape AND the accessory render in ONE injector: the cape cancels the method,
+    // so a separate accessory mixin at HEAD would be skipped by the cancel. Doing both here
+    // (accessory first, independent of the cape) guarantees both draw.
     @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
-    private void lumina$renderCape(PoseStack pose, SubmitNodeCollector collector, int light,
-                                   AvatarRenderState state, float yRot, float xRot, CallbackInfo ci) {
+    private void lumina$renderCosmetics(PoseStack pose, SubmitNodeCollector collector, int light,
+                                        AvatarRenderState state, float yRot, float xRot, CallbackInfo ci) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         if (state.id != mc.player.getId()) return;        // local player only (client-side)
-        if (!FeatureManager.isEnabled("lumina_cape")) return;
         if (state.isInvisible) return;
-        if (state.isFallFlying) return;                   // don't fight the elytra's wings
 
+        // Accessory (wings / halo / aura) — independent of the cape, guarded so a render
+        // hiccup never breaks the cape below.
+        String acc = FeatureManager.accessoryType();
+        if (acc != null) {
+            try {
+                LuminaAccessories.render(collector, pose, state, light, acc, FeatureManager.accessoryColor());
+            } catch (Throwable ignored) {}
+        }
+
+        // Cape — replace vanilla's cape with ours when one is equipped.
+        if (state.isFallFlying) return;                   // don't fight the elytra's wings
+        if (!FeatureManager.isEnabled("lumina_cape")) return;
         pose.pushPose();
         collector.submitModel(this.model, state, pose,
                 RenderTypes.entitySolid(LuminaCapeTextures.get()), light,
                 OverlayTexture.NO_OVERLAY, state.outlineColor, null);
         pose.popPose();
-        ci.cancel();   // replace vanilla's cape (Mojang cape or none) with ours
+        ci.cancel();
     }
 }
