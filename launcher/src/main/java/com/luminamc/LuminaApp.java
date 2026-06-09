@@ -93,8 +93,14 @@ public final class LuminaApp extends Application {
         }
 
         // Auto-launch (dev/testing convenience): immediately play the most-recently-played
-        // instance. Enabled via -Dluminamc.autolaunch=true.
-        if (Boolean.getBoolean("luminamc.autolaunch") && !Boolean.getBoolean("luminamc.smoketest")) {
+        // instance. Enabled via -Dluminamc.autolaunch=true OR a one-shot marker file
+        // (~/.luminamc/autolaunch.flag) so the installed .exe can be triggered too.
+        boolean autoLaunch = Boolean.getBoolean("luminamc.autolaunch");
+        try {
+            java.nio.file.Path flag = com.luminamc.config.LuminaPaths.root().resolve("autolaunch.flag");
+            if (java.nio.file.Files.exists(flag)) { autoLaunch = true; java.nio.file.Files.deleteIfExists(flag); }
+        } catch (Exception ignored) {}
+        if (autoLaunch && !Boolean.getBoolean("luminamc.smoketest")) {
             javafx.application.Platform.runLater(() -> {
                 var all = ctx.instances.all();
                 if (all.isEmpty()) { System.out.println("[autolaunch] no instances"); return; }
@@ -103,7 +109,7 @@ public final class LuminaApp extends Application {
                 new com.luminamc.ui.LaunchService(ctx).launchAsync(inst, new com.luminamc.ui.LaunchService.Callbacks() {
                     public void phase(String t) { System.out.println("[autolaunch] " + t); }
                     public void progress(double f, String d) {}
-                    public void log(String l) {}
+                    public void log(String l) { System.out.println("[game] " + l); }
                     public void started(Process p) { System.out.println("[autolaunch] game process started"); }
                     public void finished(com.luminamc.crash.CrashReporter.Report r) {}
                     public void failed(Throwable e) { System.out.println("[autolaunch] failed: " + e); }
