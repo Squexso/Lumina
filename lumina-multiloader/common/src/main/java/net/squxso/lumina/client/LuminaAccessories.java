@@ -36,19 +36,12 @@ public final class LuminaAccessories {
 
     public static void render(SubmitNodeCollector collector, PoseStack pose, AvatarRenderState state,
                               int light, String type, int argb) {
-        // Halo: a flat ring TEXTURE (a real smooth circle) on a thin disc, not voxel cubes.
-        if ("halo".equals(type)) {
-            pose.pushPose();
-            pose.translate(0, -17.0, 0);             // float above the head
-            pose.scale(0.1875f, 0.1875f, 0.1875f);   // the disc is modelled 5.3x big so the ring texture is smooth
-            collector.submitModel(halo(), state, pose, RenderTypes.entityCutoutNoCull(ringTex(argb)),
-                    light, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
-            pose.popPose();
-            return;
-        }
-
-        EntityModel<AvatarRenderState> model = "wings".equals(type) ? wings()
-                : "aura".equals(type) ? aura() : null;
+        EntityModel<AvatarRenderState> model = switch (type) {
+            case "wings" -> wings();
+            case "halo"  -> halo();
+            case "aura"  -> aura();
+            default      -> null;
+        };
         if (model == null) return;
 
         pose.pushPose();
@@ -76,33 +69,6 @@ public final class LuminaAccessories {
         return id;
     }
 
-    private static int ringArgb;
-    private static Identifier ringTexId;
-
-    /** A smooth ring (donut) drawn in the accessory colour on a transparent texture, placed at
-     *  the disc's up/down faces in the box unwrap so the halo reads as a real circle. */
-    private static Identifier ringTex(int argb) {
-        if (ringTexId != null && ringArgb == argb) return ringTexId;
-        final int W = 48, texW = 192, texH = 64;
-        NativeImage img = new NativeImage(texW, texH, false);
-        for (int y = 0; y < texH; y++) for (int x = 0; x < texW; x++) img.setPixel(x, y, 0);  // transparent
-        double outer = W * 0.46, inner = W * 0.31, cy = W / 2.0;
-        double[] cxs = {W + W / 2.0, 2.0 * W + W / 2.0};   // up-face and down-face centres in the box unwrap
-        for (double cx : cxs) {
-            for (int y = 0; y < W; y++) {
-                for (int x = (int) (cx - W / 2.0); x < (int) (cx + W / 2.0); x++) {
-                    double dx = x + 0.5 - cx, dy = y + 0.5 - cy;
-                    double d = Math.sqrt(dx * dx + dy * dy);
-                    if (d <= outer && d >= inner) img.setPixel(x, y, argb);
-                }
-            }
-        }
-        Identifier id = Identifier.fromNamespaceAndPath("lumina", "textures/entity/accessory_ring");
-        Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(() -> "lumina_ring", img));
-        ringArgb = argb;
-        ringTexId = id;
-        return id;
-    }
 
     // ── geometry (built in player model space: up = -Y, back = +Z, 16 units = 1 block) ──
 
@@ -137,16 +103,23 @@ public final class LuminaAccessories {
         return wings = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
     }
 
-    /** A thin flat disc (modelled big, scaled down at render) whose up/down faces carry the
-     *  smooth ring texture — so the halo is a real circle, not voxel cubes. */
+    /** A halo: a fine ring of many small cubes (smooth-looking, yet visible from every angle —
+     *  unlike a flat disc which is invisible edge-on). */
     private static EntityModel<AvatarRenderState> halo() {
         if (halo != null) return halo;
-        final int W = 48;
         MeshDefinition md = new MeshDefinition();
-        CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0)
-                .addBox(-W / 2f, -0.5f, -W / 2f, (float) W, 1.0f, (float) W);
+        CubeListBuilder c = CubeListBuilder.create().texOffs(0, 0);
+        int n = 36;
+        double radius = 4.5, sz = 0.8;
+        for (int i = 0; i < n; i++) {
+            double a = i / (double) n * Math.PI * 2;
+            float cx = (float) (Math.cos(a) * radius);
+            float cz = (float) (Math.sin(a) * radius);
+            c.addBox(cx - (float) (sz / 2), -16f - (float) (sz / 2), cz - (float) (sz / 2),
+                    (float) sz, (float) sz, (float) sz);
+        }
         md.getRoot().addOrReplaceChild("halo", c, PartPose.ZERO);
-        return halo = wrap(LayerDefinition.create(md, 192, 64).bakeRoot());
+        return halo = wrap(LayerDefinition.create(md, 64, 64).bakeRoot());
     }
 
     private static EntityModel<AvatarRenderState> aura() {
