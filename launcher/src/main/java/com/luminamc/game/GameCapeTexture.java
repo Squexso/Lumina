@@ -28,21 +28,17 @@ public final class GameCapeTexture {
     public static void write(String topHex, String bottomHex, Path out) throws Exception {
         BufferedImage tpl = template();
         int w = tpl.getWidth(), h = tpl.getHeight();
-        int gradCol = Math.min(40, w - 1);              // a column that is always pure gradient (crystal is on the left)
         int[] top = rgb(topHex), bot = rgb(bottomHex);
 
+        // A clean smooth top→bottom gradient (no template sheen/noise) + the crystal on top.
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < h; y++) {
-            int oldGrad = tpl.getRGB(gradCol, y);       // this row's pure-gradient colour
             double f = h <= 1 ? 0 : y / (double) (h - 1);
             int newGrad = 0xFF000000
                     | (lerp(top[0], bot[0], f) << 16)
                     | (lerp(top[1], bot[1], f) << 8)
                     |  lerp(top[2], bot[2], f);
-            for (int x = 0; x < w; x++) {
-                int p = tpl.getRGB(x, y);
-                img.setRGB(x, y, near(p, oldGrad) ? newGrad : p);
-            }
+            for (int x = 0; x < w; x++) img.setRGB(x, y, newGrad);
         }
         // Draw a clear, high-contrast Lumina crystal over the cape's back face so the logo
         // reads on EVERY cape colour (the recoloured template crystal washes out, especially
@@ -102,12 +98,6 @@ public final class GameCapeTexture {
     }
 
     /** True if {@code a} is within a small distance of {@code b} (i.e. plain fabric, not the crystal). */
-    private static boolean near(int a, int b) {
-        int dr = ((a >> 16) & 0xFF) - ((b >> 16) & 0xFF);
-        int dg = ((a >> 8) & 0xFF) - ((b >> 8) & 0xFF);
-        int db = (a & 0xFF) - (b & 0xFF);
-        return dr * dr + dg * dg + db * db < 30 * 30;
-    }
 
     private static int[] rgb(String hex) {
         int v = Integer.parseInt(hex.replace("#", ""), 16);
