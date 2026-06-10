@@ -399,6 +399,8 @@ public final class AppearanceDialog {
         ctx.config.save();
         if (owner != null && owner.getScene() != null) {
             Theme.applyBackground(owner.getScene(), id, ctx.config.backgroundImage);
+            var art = owner.getScene().getRoot().lookup(".space-art");
+            if (art instanceof com.luminamc.ui.components.SpaceArt sa) sa.setPreset(id);
         }
         refreshSelection();
     }

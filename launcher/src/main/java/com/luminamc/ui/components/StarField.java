@@ -42,6 +42,9 @@ public final class StarField extends Region {
     private long lastNs = 0;
     private double t = 0;             // seconds since start
     private double nextMeteorAt = 4;  // first shooting star after a few seconds
+    private double frameAcc = 0;      // paint at ~30 fps — twinkle stays smooth, half the work
+
+    private static final double FRAME = 1 / 30.0;
 
     private final AnimationTimer timer = new AnimationTimer() {
         @Override public void handle(long now) {
@@ -50,7 +53,11 @@ public final class StarField extends Region {
             lastNs = now;
             t += dt;
             update(dt);
-            draw();
+            frameAcc += dt;
+            if (frameAcc >= FRAME) {
+                frameAcc = 0;
+                draw();
+            }
         }
     };
 
@@ -152,6 +159,13 @@ public final class StarField extends Region {
             }
             g.setFill(s.tint.deriveColor(0, 1, 1, a));
             g.fillOval(x - s.r, y - s.r, s.r * 2, s.r * 2);
+            if (s.r > 2.4) {                              // the very brightest get a clean glint cross
+                double len = s.r * 3.2 * twinkle;
+                g.setStroke(s.tint.deriveColor(0, 1, 1, a * 0.45));
+                g.setLineWidth(0.8);
+                g.strokeLine(x - len, y, x + len, y);
+                g.strokeLine(x, y - len, x, y + len);
+            }
         }
 
         // Shooting stars: a fading trail of dots behind a bright head.
