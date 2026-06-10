@@ -92,6 +92,12 @@ public final class Sidebar extends VBox {
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(4, 0, 6, 0));
 
+        // The logo doubles as the appearance switcher: click → accent + background panel.
+        box.setCursor(javafx.scene.Cursor.HAND);
+        Tooltip.install(box, new Tooltip("Customize appearance"));
+        box.setOnMouseClicked(e ->
+                new AppearanceDialog(ctx).show(getScene() != null ? getScene().getWindow() : null));
+
         // Gentle violet glow that breathes around the logo.
         javafx.scene.effect.DropShadow glow = new javafx.scene.effect.DropShadow();
         glow.setColor(javafx.scene.paint.Color.web("#8B5CF6"));

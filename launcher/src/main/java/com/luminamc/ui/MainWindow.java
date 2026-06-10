@@ -65,6 +65,8 @@ public final class MainWindow {
         Region cosmic = new Region();
         cosmic.getStyleClass().add("cosmic-bg");
         com.luminamc.ui.components.StarField stars = new com.luminamc.ui.components.StarField();
+        stars.getStyleClass().add("star-field");          // looked up by the appearance panel
+        stars.setVisible(ctx.config.showStars);
 
         root.getChildren().addAll(cosmic, stars, shell);
         root.getStyleClass().add("app-root");

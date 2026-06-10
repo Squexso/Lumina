@@ -36,6 +36,7 @@ public final class LuminaApp extends Application {
         Scene scene = new Scene(outer, 1100, 720);
         Theme.apply(scene);
         Theme.applyAccent(scene, ctx.config.accentColor);
+        Theme.applyBackground(scene, ctx.config.backgroundTheme);
 
         stage.setScene(scene);
         stage.setTitle("LuminaMC");

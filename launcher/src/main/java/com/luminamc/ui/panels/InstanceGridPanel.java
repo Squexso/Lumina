@@ -176,17 +176,14 @@ public final class InstanceGridPanel extends BorderPane {
         // ── icon tile ──
         StackPane icon = monogram(inst);
 
-        // ── titles ──
+        // ── titles (three tidy lines: name · version+loader · last-played) ──
         Label name = new Label((inst.pinned ? "📌 " : "") + inst.name);
         name.getStyleClass().add("card-title");
-        Label mc = FxUi.muted("Minecraft " + inst.mcVersion);
-        mc.getStyleClass().add("card-sub");
-        String detail = inst.loader.displayName
-                + (inst.loaderVersion != null ? " " + inst.loaderVersion : "");
-        Label det = FxUi.muted(detail);
-        det.getStyleClass().add("card-detail");
 
-        // Status line: when it was last played + total time on this instance.
+        Label sub = FxUi.muted("Minecraft " + inst.mcVersion + "  ·  " + inst.loader.displayName
+                + (inst.loaderVersion != null ? " " + inst.loaderVersion : ""));
+        sub.getStyleClass().add("card-sub");
+
         String status = inst.lastPlayed > 0
                 ? "Played " + relativeTime(inst.lastPlayed)
                   + (inst.playMillis > 0 ? "  ·  " + humanDuration(inst.playMillis) + " total" : "")
@@ -194,22 +191,15 @@ public final class InstanceGridPanel extends BorderPane {
         Label stat = FxUi.muted(status);
         stat.getStyleClass().add("card-detail");
 
-        VBox titles = new VBox(2, name, mc, det, stat);
+        VBox titles = new VBox(3, name, sub, stat);
         titles.setAlignment(Pos.CENTER_LEFT);
 
-        // ── menu + folder buttons ──
+        // ── single overflow menu (folder/pin/delete all live inside it) ──
         Button menu = new Button("⋮");
         menu.getStyleClass().add("card-icon-btn");
         menu.setOnAction(e -> showCardMenu(menu, inst));
 
-        Button folder = new Button("🗀");
-        folder.getStyleClass().add("card-icon-btn");
-        folder.setOnAction(e -> openDir(LuminaPaths.instanceGameDir(inst.id)));
-
-        VBox actions = new VBox(6, menu, folder);
-        actions.setAlignment(Pos.TOP_RIGHT);
-
-        HBox top = new HBox(12, icon, titles, FxUi.hgrow(), actions);
+        HBox top = new HBox(12, icon, titles, FxUi.hgrow(), menu);
         top.setAlignment(Pos.TOP_LEFT);
 
         // ── play button ──
@@ -218,7 +208,7 @@ public final class InstanceGridPanel extends BorderPane {
         play.setMaxWidth(Double.MAX_VALUE);
         play.setOnAction(e -> launch(inst, play));
 
-        VBox card = new VBox(14, top, play);
+        VBox card = new VBox(16, top, play);
         card.getStyleClass().add("instance-card");
         card.setPrefWidth(300);
         card.setMinWidth(280);
@@ -255,20 +245,24 @@ public final class InstanceGridPanel extends BorderPane {
         String s = inst.name == null || inst.name.isBlank() ? "?"
                 : inst.name.substring(0, 1).toUpperCase();
         Label letter = new Label(s);
-        letter.setStyle("-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;");
+        letter.setStyle("-fx-text-fill: rgba(255,255,255,0.95); -fx-font-size: 22px; -fx-font-weight: bold;");
 
         StackPane tile = new StackPane(letter);
-        tile.setMinSize(52, 52);
-        tile.setPrefSize(52, 52);
-        tile.setMaxSize(52, 52);
+        tile.setMinSize(50, 50);
+        tile.setPrefSize(50, 50);
+        tile.setMaxSize(50, 50);
 
-        // Hue derived from the name so each instance gets a stable distinct color.
+        // Hue derived from the name so each instance keeps a stable, distinct colour — but
+        // muted (low saturation, deeper value) so the tiles read as a cohesive set rather
+        // than a clashing rainbow.
         double hue = Math.abs((inst.id != null ? inst.id : s).hashCode() % 360);
-        Color c1 = Color.hsb(hue, 0.55, 0.78);
-        Color c2 = Color.hsb((hue + 28) % 360, 0.65, 0.55);
+        Color c1 = Color.hsb(hue, 0.40, 0.58);
+        Color c2 = Color.hsb((hue + 18) % 360, 0.50, 0.38);
         LinearGradient g = new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
                 new Stop(0, c1), new Stop(1, c2));
-        tile.setBackground(new Background(new BackgroundFill(g, new CornerRadii(13), Insets.EMPTY)));
+        tile.setBackground(new Background(new BackgroundFill(g, new CornerRadii(14), Insets.EMPTY)));
+        tile.setBorder(new Border(new BorderStroke(Color.web("#ffffff", 0.10),
+                BorderStrokeStyle.SOLID, new CornerRadii(14), new BorderWidths(1))));
         return tile;
     }
 

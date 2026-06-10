@@ -560,3 +560,25 @@
 
 .mini-spinner { -fx-progress-color: #8B5CF6; }
 .mini-spinner > .determinate-indicator > .indicator { -fx-background-color: transparent; }
+
+/* ── appearance panel (logo click) ────────────────────────────── */
+.accent-swatch {
+    -fx-padding: 3;
+    -fx-background-radius: 99;
+    -fx-border-radius: 99;
+    -fx-border-width: 2;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+.accent-swatch:hover    { -fx-border-color: rgba(255,255,255,0.35); }
+.accent-swatch:selected { -fx-border-color: #FFFFFF; }
+
+.bg-tile {
+    -fx-background-radius: 13;
+    -fx-border-radius: 13;
+    -fx-border-width: 2;
+    -fx-border-color: rgba(255,255,255,0.10);
+}
+.bg-tile:hover    { -fx-border-color: rgba(255,255,255,0.40); }
+.bg-tile:selected { -fx-border-color: #FFFFFF; }
+.bg-name { -fx-text-fill: #B3A9CC; -fx-font-size: 11px; }
