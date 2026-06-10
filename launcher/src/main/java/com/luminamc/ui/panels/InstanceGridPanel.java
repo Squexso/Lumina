@@ -38,6 +38,17 @@ public final class InstanceGridPanel extends BorderPane {
 
     private final FlowPane grid = new FlowPane(18, 18);
 
+    // Search + sort state for the grid.
+    private String query = "";
+    private SortMode sortMode = SortMode.RECENT;
+
+    private enum SortMode {
+        RECENT("Last played"), NAME("Name"), CREATED("Newest"), PLAYTIME("Most played");
+        final String label;
+        SortMode(String label) { this.label = label; }
+        @Override public String toString() { return label; }
+    }
+
     // Bottom status bar.
     private final Label spaceLabel = new Label("Calculating disk usage…");
     private final Label playtimeLabel = new Label();
@@ -62,18 +73,40 @@ public final class InstanceGridPanel extends BorderPane {
 
     // ── header ───────────────────────────────────────────────────────────
 
+    private TextField searchField;
+
     private HBox header() {
         Label title = new Label("My Instances");
         title.getStyleClass().add("page-title");
+
+        searchField = new TextField();
+        searchField.setPromptText("🔍  Search…");
+        searchField.setPrefWidth(200);
+        searchField.textProperty().addListener((o, a, b) -> {
+            query = b == null ? "" : b.trim().toLowerCase();
+            rebuild();
+        });
+
+        ComboBox<SortMode> sort = new ComboBox<>();
+        sort.getItems().setAll(SortMode.values());
+        sort.setValue(sortMode);
+        sort.setOnAction(e -> {
+            if (sort.getValue() != null) { sortMode = sort.getValue(); rebuild(); }
+        });
 
         Button create = new Button("✛   Create New Instance");
         create.getStyleClass().add("create-button");
         create.setOnAction(e -> onCreate.run());
 
-        HBox bar = new HBox(title, FxUi.hgrow(), create);
+        HBox bar = new HBox(12, title, FxUi.hgrow(), searchField, sort, create);
         bar.setAlignment(Pos.CENTER_LEFT);
         bar.setPadding(new Insets(28, 32, 18, 32));
         return bar;
+    }
+
+    /** Lets callers (e.g. a Ctrl+F shortcut) focus the search box. */
+    public void focusSearch() {
+        if (searchField != null) searchField.requestFocus();
     }
 
     private ScrollPane scrollGrid() {
@@ -93,14 +126,41 @@ public final class InstanceGridPanel extends BorderPane {
         grid.getChildren().clear();
         // Most-recently-played first (a freshly launched instance jumps to the
         // front); never-played fall back to newest-created.
-        java.util.Comparator<Instance> order =
+        java.util.Comparator<Instance> recent =
                 java.util.Comparator.comparingLong((Instance i) -> i.lastPlayed).reversed()
                         .thenComparing(java.util.Comparator.comparingLong((Instance i) -> i.createdAt).reversed());
-        ctx.instances.all().stream().sorted(order).forEach(inst -> grid.getChildren().add(card(inst)));
+        java.util.Comparator<Instance> order = switch (sortMode) {
+            case NAME     -> java.util.Comparator.comparing((Instance i) -> i.name == null ? "" : i.name.toLowerCase());
+            case CREATED  -> java.util.Comparator.comparingLong((Instance i) -> i.createdAt).reversed();
+            case PLAYTIME -> java.util.Comparator.comparingLong((Instance i) -> i.playMillis).reversed().thenComparing(recent);
+            default       -> recent;
+        };
+        var shown = ctx.instances.all().stream().filter(this::matches).sorted(order).toList();
+        shown.forEach(inst -> grid.getChildren().add(card(inst)));
         if (ctx.instances.all().isEmpty()) {
             grid.getChildren().add(emptyHint());
+        } else if (shown.isEmpty()) {
+            grid.getChildren().add(noMatchHint());
         }
         updatePlaytime();
+    }
+
+    /** True if the instance matches the current search query (name / version / loader). */
+    private boolean matches(Instance i) {
+        if (query.isEmpty()) return true;
+        String hay = ((i.name == null ? "" : i.name) + " "
+                + (i.mcVersion == null ? "" : i.mcVersion) + " "
+                + i.loader.displayName).toLowerCase();
+        return hay.contains(query);
+    }
+
+    private VBox noMatchHint() {
+        Label l1 = new Label("No matches");
+        l1.getStyleClass().add("row-label");
+        Label l2 = FxUi.muted("No instances match “" + query + "”.");
+        VBox box = new VBox(6, l1, l2);
+        box.setPadding(new Insets(40));
+        return box;
     }
 
     private VBox emptyHint() {
@@ -122,11 +182,19 @@ public final class InstanceGridPanel extends BorderPane {
         Label mc = FxUi.muted("Minecraft " + inst.mcVersion);
         mc.getStyleClass().add("card-sub");
         String detail = inst.loader.displayName
-                + (inst.loaderVersion != null ? " " + inst.loaderVersion : "")
-                + (inst.lastPlayed > 0 ? "  ·  played" : "");
+                + (inst.loaderVersion != null ? " " + inst.loaderVersion : "");
         Label det = FxUi.muted(detail);
         det.getStyleClass().add("card-detail");
-        VBox titles = new VBox(2, name, mc, det);
+
+        // Status line: when it was last played + total time on this instance.
+        String status = inst.lastPlayed > 0
+                ? "Played " + relativeTime(inst.lastPlayed)
+                  + (inst.playMillis > 0 ? "  ·  " + humanDuration(inst.playMillis) + " total" : "")
+                : "Never played";
+        Label stat = FxUi.muted(status);
+        stat.getStyleClass().add("card-detail");
+
+        VBox titles = new VBox(2, name, mc, det, stat);
         titles.setAlignment(Pos.CENTER_LEFT);
 
         // ── menu + folder buttons ──
@@ -376,6 +444,28 @@ public final class InstanceGridPanel extends BorderPane {
         long min = ctx.config.totalPlayMillis / 60_000;
         long h = min / 60, m = min % 60;
         playtimeLabel.setText("Playtime: " + (h > 0 ? h + "h " : "") + m + "m");
+    }
+
+    /** "just now", "5m ago", "3h ago", "2d ago", "4w ago", "6mo ago", "1y ago". */
+    private static String relativeTime(long then) {
+        long diff = System.currentTimeMillis() - then;
+        if (diff < 60_000) return "just now";
+        long min = diff / 60_000;
+        if (min < 60) return min + "m ago";
+        long hrs = min / 60;
+        if (hrs < 24) return hrs + "h ago";
+        long days = hrs / 24;
+        if (days < 7) return days + "d ago";
+        if (days < 30) return (days / 7) + "w ago";
+        if (days < 365) return (days / 30) + "mo ago";
+        return (days / 365) + "y ago";
+    }
+
+    /** "45m", "3h 24m". */
+    private static String humanDuration(long millis) {
+        long min = millis / 60_000;
+        long h = min / 60, m = min % 60;
+        return h > 0 ? h + "h " + m + "m" : m + "m";
     }
 
     private void computeDiskUsageAsync() {

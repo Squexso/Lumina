@@ -181,6 +181,8 @@ public final class LaunchService {
             if (played > 0) {
                 ctx.config.totalPlayMillis += played;
                 ctx.config.save();
+                inst.playMillis += played;             // per-instance playtime (shown on the card)
+                ctx.instances.save(inst);
                 new com.luminamc.shop.TokenEconomy(ctx.config).sync(ctx.config.totalPlayMillis);
             }
 

@@ -37,6 +37,9 @@ public final class Instance {
     public long createdAt  = System.currentTimeMillis();
     public long lastPlayed = 0L;
 
+    /** Total time (ms) this instance has been played through the launcher. */
+    public long playMillis = 0L;
+
     /** Pinned instances are surfaced in the sidebar for quick access. */
     public boolean pinned = false;
 
