@@ -63,6 +63,15 @@ tasks.register('diag', JavaExec) {
     mainClass = 'com.luminamc.Diag'
 }
 
+// Installs a new brand logo: center-crops the source image to a square and writes it
+// to src/main/resources/assets/logo.png. Run: gradlew -p launcher installLogo -Psrc="..."
+tasks.register('installLogo', JavaExec) {
+    group = 'distribution'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.luminamc.tools.LogoInstall'
+    if (project.hasProperty('src')) args = [project.property('src').toString()]
+}
+
 tasks.named('run') {
     // Allow the game-launch subprocess and OAuth browser to work in dev runs.
     systemProperty 'luminamc.dev', 'true'

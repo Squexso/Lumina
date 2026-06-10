@@ -422,7 +422,18 @@ public final class InstanceGridPanel extends BorderPane {
         globalProgress.getStyleClass().add("global-progress");
         globalProgress.setPrefWidth(180);
 
-        var crystal = CrystalLogo.crystalNode(20);
+        javafx.scene.Node crystal;
+        javafx.scene.image.Image logoImg = com.luminamc.ui.Theme.logo();
+        if (logoImg != null) {
+            javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView(logoImg);
+            iv.setFitWidth(22);
+            iv.setFitHeight(22);
+            iv.setPreserveRatio(true);
+            iv.setSmooth(true);
+            crystal = iv;
+        } else {
+            crystal = CrystalLogo.crystalNode(20);
+        }
 
         VBox progBox = new VBox(3, progressLabel, globalProgress);
         progBox.setAlignment(Pos.CENTER_RIGHT);

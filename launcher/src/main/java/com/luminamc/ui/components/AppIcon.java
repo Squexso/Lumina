@@ -79,9 +79,49 @@ public final class AppIcon {
         o.write(v & 0xFF); o.write((v >> 8) & 0xFF); o.write((v >> 16) & 0xFF); o.write((v >> 24) & 0xFF);
     }
 
+    private static Image bundledLogo;
+    private static boolean bundledLogoTried;
+
+    /** The bundled brand logo ({@code /assets/logo.png}) if present, else null. */
+    private static Image bundledLogo() {
+        if (!bundledLogoTried) {
+            bundledLogoTried = true;
+            try (var in = AppIcon.class.getResourceAsStream("/assets/logo.png")) {
+                if (in != null) bundledLogo = new Image(in);
+            } catch (Exception ignored) {}
+        }
+        return bundledLogo;
+    }
+
     private static Image render(int size) {
-        Rectangle bg = new Rectangle(size, size);
         double arc = size * 0.26;
+
+        // Prefer the bundled brand logo image (rounded-clipped); fall back to the vector crystal.
+        Image logo = bundledLogo();
+        StackPane root;
+        if (logo != null) {
+            javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView(logo);
+            iv.setFitWidth(size);
+            iv.setFitHeight(size);
+            iv.setSmooth(true);
+            Rectangle clip = new Rectangle(size, size);
+            clip.setArcWidth(arc);
+            clip.setArcHeight(arc);
+            iv.setClip(clip);
+            root = new StackPane(iv);
+            root.setPrefSize(size, size);
+            root.setMaxSize(size, size);
+            root.setStyle("-fx-background-color: transparent;");
+            new Scene(root, size, size, Color.TRANSPARENT);
+            root.applyCss();
+            root.layout();
+            SnapshotParameters spx = new SnapshotParameters();
+            spx.setFill(Color.TRANSPARENT);
+            spx.setViewport(new javafx.geometry.Rectangle2D(0, 0, size, size));
+            return root.snapshot(spx, null);
+        }
+
+        Rectangle bg = new Rectangle(size, size);
         bg.setArcWidth(arc);
         bg.setArcHeight(arc);
         bg.setFill(new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
@@ -90,7 +130,7 @@ public final class AppIcon {
 
         Group crystal = CrystalLogo.crystalNode(size * 0.60);
 
-        StackPane root = new StackPane(bg, crystal);
+        root = new StackPane(bg, crystal);
         root.setPrefSize(size, size);
         root.setMaxSize(size, size);
         root.setStyle("-fx-background-color: transparent;");
