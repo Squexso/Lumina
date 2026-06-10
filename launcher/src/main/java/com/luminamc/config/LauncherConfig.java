@@ -18,8 +18,12 @@ public final class LauncherConfig {
     /** Accent color (hex) for the UI; spec default is violet. */
     public String accentColor = "#7C3AED";
 
-    /** Background preset id (see {@code Theme.BACKGROUNDS}); default is the violet nebula. */
+    /** Background preset id (see {@code Theme.BACKGROUNDS}); default is the violet nebula.
+     *  The special id {@code "custom"} uses {@link #backgroundImage} instead. */
     public String backgroundTheme = "nebula";
+
+    /** Absolute path of the user's own background image (used when backgroundTheme = "custom"). */
+    public String backgroundImage = null;
 
     /** Whether the animated star field is drawn over the background. */
     public boolean showStars = true;

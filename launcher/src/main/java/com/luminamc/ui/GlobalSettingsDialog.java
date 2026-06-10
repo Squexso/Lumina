@@ -101,12 +101,11 @@ public final class GlobalSettingsDialog {
         Spinner<Integer> threads = new Spinner<>(1, 32, cfg.downloadThreads);
         threads.valueProperty().addListener((o, a, b) -> cfg.downloadThreads = b);
 
-        // Accent.
-        ColorPicker accent = new ColorPicker(safeColor(cfg.accentColor));
-        accent.valueProperty().addListener((o, a, b) -> {
-            cfg.accentColor = toHex(b);
-            if (accent.getScene() != null) Theme.applyAccent(accent.getScene(), cfg.accentColor);
-        });
+        // Accent + background live in the Appearance panel (fully custom — no OS colour dialog).
+        Button accent = new Button("🎨  Open appearance panel…");
+        accent.getStyleClass().add("ghost-button");
+        accent.setOnAction(e -> new AppearanceDialog(ctx)
+                .show(accent.getScene() != null ? accent.getScene().getWindow() : null));
 
         // Behavior.
         CheckBox closeOnLaunch = new CheckBox("Hide launcher while the game runs");
@@ -174,7 +173,7 @@ public final class GlobalSettingsDialog {
                 FxUi.card(FxUi.sectionTitle("Downloads"),
                         labeled("Parallel download threads", threads)),
                 FxUi.card(FxUi.sectionTitle("Appearance & behavior"),
-                        labeled("Accent color", accent), closeOnLaunch),
+                        labeled("Accent & background", accent), closeOnLaunch),
                 FxUi.card(FxUi.sectionTitle("Global keybinds"),
                         labeled("Open in-game overlay", overlayKey),
                         FxUi.muted("Click the field and press a key. Default: Right Shift.")),

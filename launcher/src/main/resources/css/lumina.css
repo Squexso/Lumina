@@ -23,6 +23,8 @@
             #502c92 0%, #361a68 30%, #1d0f3a 60%, #0d0720 82%, #070411 100%);
 }
 .shell, .center-host { -fx-background-color: transparent; }
+/* Dimming layer over custom background images (transparent for presets). */
+.cosmic-veil { -fx-background-color: transparent; }
 
 /* ── typography ───────────────────────────────────────────────── */
 .h1            { -fx-text-fill: #F4F1FB; -fx-font-size: 22px; -fx-font-weight: bold; }

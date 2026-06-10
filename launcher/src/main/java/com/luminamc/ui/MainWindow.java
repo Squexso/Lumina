@@ -61,14 +61,18 @@ public final class MainWindow {
         shell.setCenter(centerHost);
         shell.getStyleClass().add("shell");
 
-        // Cosmic background layers: gradient + star field, behind the shell.
+        // Cosmic background layers: gradient/image + dimming veil + star field, behind the
+        // shell. The veil is transparent for presets and darkens custom images so the UI
+        // stays legible (both driven by Theme.applyBackground's override stylesheet).
         Region cosmic = new Region();
         cosmic.getStyleClass().add("cosmic-bg");
+        Region veil = new Region();
+        veil.getStyleClass().add("cosmic-veil");
         com.luminamc.ui.components.StarField stars = new com.luminamc.ui.components.StarField();
         stars.getStyleClass().add("star-field");          // looked up by the appearance panel
         stars.setVisible(ctx.config.showStars);
 
-        root.getChildren().addAll(cosmic, stars, shell);
+        root.getChildren().addAll(cosmic, veil, stars, shell);
         root.getStyleClass().add("app-root");
 
         showHome();
