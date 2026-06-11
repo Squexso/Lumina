@@ -44,6 +44,7 @@ public final class SkinView3D {
 
     public SkinView3D(Image skin, boolean slim, Image capeTexture, String accessory, javafx.scene.paint.Color accColor) {
         this.capeTex = capeTexture;
+        skin = normalize(skin);            // legacy 64×32 → modern 64×64 + overlay cleanup
         int armW = slim ? 3 : 4;
         double armX = slim ? 5.5 : 6.0;
 
@@ -86,7 +87,17 @@ public final class SkinView3D {
         javafx.scene.AmbientLight ambient = new javafx.scene.AmbientLight(Color.color(0.82, 0.82, 0.82));
         javafx.scene.PointLight key = new javafx.scene.PointLight(Color.color(0.5, 0.5, 0.55));
         key.setTranslateZ(-80); key.setTranslateY(-60); key.setTranslateX(-40);
-        root.getChildren().addAll(ambient, key);
+        // Soft violet fill from the back-right so the shadow side isn't a flat slab.
+        javafx.scene.PointLight fill = new javafx.scene.PointLight(Color.color(0.22, 0.20, 0.30));
+        fill.setTranslateZ(70); fill.setTranslateY(-30); fill.setTranslateX(55);
+        root.getChildren().addAll(ambient, key, fill);
+
+        // Soft ground shadow so the model doesn't float in nothing.
+        javafx.scene.shape.Cylinder shadow = new javafx.scene.shape.Cylinder(9.5, 0.25);
+        PhongMaterial sm = new PhongMaterial(Color.color(0, 0, 0, 0.30));
+        shadow.setMaterial(sm);
+        shadow.setTranslateY(16.6);                       // just under the feet
+        model.getChildren().add(shadow);
 
         SubScene scene = new SubScene(root, w, h, true, SceneAntialiasing.BALANCED);
         scene.setFill(Color.TRANSPARENT);
@@ -95,7 +106,7 @@ public final class SkinView3D {
         cam.setFieldOfView(38);
         cam.setNearClip(0.1);
         cam.setFarClip(1000);
-        cam.setTranslateZ(-72);
+        cam.setTranslateZ(-84);                           // a little breathing room around the model
         scene.setCamera(cam);
 
         // Drag to rotate.
@@ -353,6 +364,95 @@ public final class SkinView3D {
         mv.setMaterial(mat);
         mv.setCullFace(CullFace.NONE);
         return mv;
+    }
+
+    // ── skin normalisation (same rules vanilla applies on download) ─────────
+
+    /**
+     * Brings any skin into the modern 64×64 layout the cuboid UVs expect.
+     *
+     * <p>Legacy 64×32 skins have no left-limb or overlay regions — sampling those UVs
+     * clamps to edge pixels and smears garbage over the arms/body. Like vanilla, we
+     * expand them: mirror the right arm/leg into the left slots, force the base
+     * regions opaque, and apply the classic "Notch hack" (an overlay region with no
+     * transparent pixel at all is leftover background → cleared). HD skins are
+     * sampled down to 64 logical pixels.
+     */
+    private static Image normalize(Image src) {
+        if (src == null || src.getPixelReader() == null) return src;
+        int w = (int) src.getWidth(), h = (int) src.getHeight();
+        if (w < 64) return src;
+        boolean legacy = h * 2 == w;                      // 64×32-style
+        double sc = w / 64.0;
+
+        PixelReader r = src.getPixelReader();
+        WritableImage out = new WritableImage(64, 64);
+        PixelWriter pw = out.getPixelWriter();
+        int rows = legacy ? 32 : Math.min(64, (int) (h / sc));
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < 64; x++) {
+                pw.setArgb(x, y, r.getArgb((int) (x * sc), (int) (y * sc)));
+            }
+        }
+
+        if (legacy) {
+            // Vanilla's exact mirror-copies that synthesise the left leg/arm (dest = src
+            // offset by (dx,dy), flipped horizontally).
+            int[][] copies = {
+                    {4, 16, 16, 32, 4, 4}, {8, 16, 16, 32, 4, 4},
+                    {0, 20, 24, 32, 4, 12}, {4, 20, 16, 32, 4, 12},
+                    {8, 20, 8, 32, 4, 12}, {12, 20, 16, 32, 4, 12},
+                    {44, 16, -8, 32, 4, 4}, {48, 16, -8, 32, 4, 4},
+                    {40, 20, 0, 32, 4, 12}, {44, 20, -8, 32, 4, 12},
+                    {48, 20, -16, 32, 4, 12}, {52, 20, -8, 32, 4, 12}};
+            PixelReader or = out.getPixelReader();
+            for (int[] c : copies) {
+                for (int y = 0; y < c[5]; y++) {
+                    for (int x = 0; x < c[4]; x++) {
+                        pw.setArgb(c[0] + c[2] + (c[4] - 1 - x), c[1] + c[3] + y,
+                                or.getArgb(c[0] + x, c[1] + y));
+                    }
+                }
+            }
+        }
+
+        // Base layers must be opaque; overlay regions with zero transparency are
+        // leftover background and get cleared (vanilla's rules, applied to all skins).
+        setOpaque(out, 0, 0, 32, 16);
+        if (legacy) clearIfNoTransparency(out, 32, 0, 64, 32);
+        setOpaque(out, 0, 16, 64, 32);
+        setOpaque(out, 16, 48, 48, 64);
+        clearIfNoTransparency(out, 0, 32, 16, 48);
+        clearIfNoTransparency(out, 16, 32, 40, 48);
+        clearIfNoTransparency(out, 40, 32, 56, 48);
+        clearIfNoTransparency(out, 0, 48, 16, 64);
+        clearIfNoTransparency(out, 48, 48, 64, 64);
+        return out;
+    }
+
+    private static void setOpaque(WritableImage img, int x1, int y1, int x2, int y2) {
+        PixelReader r = img.getPixelReader();
+        PixelWriter w = img.getPixelWriter();
+        for (int y = y1; y < y2; y++) {
+            for (int x = x1; x < x2; x++) {
+                w.setArgb(x, y, r.getArgb(x, y) | 0xFF000000);
+            }
+        }
+    }
+
+    private static void clearIfNoTransparency(WritableImage img, int x1, int y1, int x2, int y2) {
+        PixelReader r = img.getPixelReader();
+        for (int y = y1; y < y2; y++) {
+            for (int x = x1; x < x2; x++) {
+                if ((r.getArgb(x, y) >>> 24) < 128) return;   // real overlay → keep
+            }
+        }
+        PixelWriter w = img.getPixelWriter();
+        for (int y = y1; y < y2; y++) {
+            for (int x = x1; x < x2; x++) {
+                w.setArgb(x, y, r.getArgb(x, y) & 0x00FFFFFF);
+            }
+        }
     }
 
     // ── cuboid built from six textured quads ────────────────────────────────
