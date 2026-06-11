@@ -518,6 +518,7 @@ public final class ShopPanel extends BorderPane {
         box.setPrefWidth(280);
         box.setMinWidth(280);
         box.setMaxWidth(280);
+        box.setMaxHeight(Region.USE_PREF_SIZE);   // don't stretch to the (tall) collection's height
         box.setStyle("-fx-background-color: rgba(18,12,34,0.60); -fx-background-radius: 16;"
                 + " -fx-border-color: " + r.color + "99; -fx-border-width: 1.5; -fx-border-radius: 16;");
         DropShadow glow = new DropShadow(16, Color.web(r.color));
