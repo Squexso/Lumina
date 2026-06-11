@@ -28,12 +28,18 @@ cd lumina-multiloader && ./gradlew build
 
 Requires JDK 21.
 
-## Code signing
+## Windows SmartScreen note
 
-Windows builds of LuminaMC are code-signed for free by the
-**[SignPath Foundation](https://signpath.org)**, with signing infrastructure
-provided by **[SignPath.io](https://signpath.io)**. See
-[`docs/SIGNING.md`](docs/SIGNING.md) for how the release pipeline is set up.
+LuminaMC builds are **not code-signed yet**, so the first launch may show
+*“Windows protected your PC”*. That's only because the project is new — to run it:
+
+1. Click **More info**
+2. Click **Run anyway**
+
+This warning disappears on its own as more people download LuminaMC (SmartScreen
+reputation is download-based). Code signing via the
+[SignPath Foundation](https://signpath.org) is planned once the project has grown —
+the release pipeline is already wired for it, see [`docs/SIGNING.md`](docs/SIGNING.md).
 
 ## License
 

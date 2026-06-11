@@ -1,5 +1,14 @@
 # Code signing (stop the Windows SmartScreen warning)
 
+> **Status (June 2026):** Applied to SignPath Foundation on 2026-06-09 — **declined**
+> on 2026-06-10: the project doesn't yet show enough *external verification signals*
+> (GitHub stars/forks/contributors, Reddit/YouTube/blog mentions, sustained user
+> activity). Not a quality judgment; they explicitly invite reapplying once the
+> project has public traction. **Plan:** keep releasing, grow the community
+> (Discord, posts, stars), then reapply at <https://signpath.org/apply>.
+> The CI signing steps below stay a no-op until then — releases work unsigned,
+> and the README explains the SmartScreen "Run anyway" flow to users.
+
 Windows flags `LuminaMC-windows.zip` as coming from an *“unknown publisher”* because
 the `.exe` inside it isn’t **code-signed**. The only real fix is signing the `.exe`
 with a certificate from a CA that Windows trusts. A self-signed certificate does **not**
