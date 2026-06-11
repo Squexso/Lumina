@@ -27,8 +27,9 @@ public final class ModelPreview {
 
     /** Front ¾ view (shows the face) — the default for skin previews. */
     private static final double FRONT_YAW = 137, FRONT_PITCH = -4;
-    /** Straight-back view (shows the cape/wings fully centred) — for cosmetic previews. */
-    public static final double BACK_YAW = 0, BACK_PITCH = -6;
+    /** Slight ¾-back view — the cape shows fully but the model keeps some depth,
+     *  instead of the flat "pressed against glass" look of a dead-straight back shot. */
+    public static final double BACK_YAW = 24, BACK_PITCH = -7;
 
     public static void into(StackPane holder, String skinUrl, boolean slim,
                             Image capeTex, String accType, Color accColor) {

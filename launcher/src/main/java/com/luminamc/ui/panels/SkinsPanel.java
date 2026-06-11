@@ -98,8 +98,7 @@ public final class SkinsPanel extends BorderPane {
     private void refreshHero() {
         String capeId = wallet.equippedCape();
         Cosmetic capeC = capeId != null ? ShopCatalog.cosmetic(capeId) : null;
-        Image capeTex = capeC != null
-                ? CapeTexture.build(Color.web(capeC.colorTop()), Color.web(capeC.colorBottom())) : null;
+        Image capeTex = capeC != null ? CapeTexture.build(capeC) : null;
 
         String accId = wallet.equippedAccessory();
         Cosmetic accC = accId != null ? ShopCatalog.accessory(accId) : null;
@@ -210,7 +209,7 @@ public final class SkinsPanel extends BorderPane {
         boolean owned = wallet.owns(c.id());
         boolean equipped = wallet.isCapeEquipped(c.id());
 
-        StackPane preview = CapeView.build(96, c.colorTop(), c.colorBottom());
+        StackPane preview = CapeView.build(96, c);
         if (!owned) preview.setOpacity(0.4);
 
         Label name = new Label(c.name());

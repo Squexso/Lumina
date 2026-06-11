@@ -500,8 +500,7 @@ public final class ShopPanel extends BorderPane {
     private void buildPreviewModel(StackPane holder, Cosmetic selected) {
         Cosmetic capeC = selected.kind() == Cosmetic.Kind.CAPE ? selected
                 : (wallet.equippedCape() != null ? ShopCatalog.cosmetic(wallet.equippedCape()) : null);
-        Image capeTex = capeC != null
-                ? CapeTexture.build(Color.web(capeC.colorTop()), Color.web(capeC.colorBottom())) : null;
+        Image capeTex = capeC != null ? CapeTexture.build(capeC) : null;
 
         Cosmetic accC = selected.kind() == Cosmetic.Kind.ACCESSORY ? selected
                 : (wallet.equippedAccessory() != null ? ShopCatalog.accessory(wallet.equippedAccessory()) : null);
@@ -527,7 +526,7 @@ public final class ShopPanel extends BorderPane {
         boolean selected = c.id().equals(selectedId);
 
         StackPane preview = c.kind() == Cosmetic.Kind.CAPE
-                ? CapeView.build(86, c.colorTop(), c.colorBottom())
+                ? CapeView.build(86, c)
                 : accessoryIcon(c);
 
         Label name = new Label(c.name());

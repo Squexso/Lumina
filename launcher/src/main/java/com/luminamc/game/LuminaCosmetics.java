@@ -70,11 +70,11 @@ public final class LuminaCosmetics {
                 GSON.toJson(root, w);
             }
 
-            // Recolour the cape template to the equipped cape and drop it where the mod
-            // looks for it (config/lumina/cape.png), or clear it when no cape is equipped.
+            // Render the equipped cape's design and drop it where the mod looks for it
+            // (config/lumina/cape.png), or clear it when no cape is equipped.
             Path capePng = LuminaPaths.instanceLuminaCapePng(inst.id);
             if (capeOn) {
-                GameCapeTexture.write(cape.colorTop(), cape.colorBottom(), capePng);
+                GameCapeTexture.write(cape, capePng);
             } else {
                 Files.deleteIfExists(capePng);
             }
