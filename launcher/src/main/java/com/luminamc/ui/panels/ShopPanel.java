@@ -484,34 +484,44 @@ public final class ShopPanel extends BorderPane {
         return l;
     }
 
-    /** Big 3D preview of the selected item on the player, framed in its rarity colour. */
+    /** Compact 3D preview card: name + rarity pill on top, model, then price + action. */
     private VBox itemPreview(Cosmetic c) {
         com.luminamc.shop.Rarity r = c.rarity();
 
+        Label name = new Label(c.name());
+        name.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
+        Label pill = new Label(r.label);
+        pill.setStyle("-fx-background-color: " + r.color + "26; -fx-text-fill: " + r.color
+                + "; -fx-font-weight: bold; -fx-font-size: 11px;"
+                + " -fx-background-radius: 99; -fx-border-color: " + r.color + "55;"
+                + " -fx-border-radius: 99; -fx-padding: 2 10 2 10;");
+        HBox head = new HBox(10, name, FxUi.hgrow(), pill);
+        head.setAlignment(Pos.CENTER_LEFT);
+
         StackPane model = new StackPane();
-        model.setMinSize(290, 400);
-        model.setPrefSize(290, 400);
+        model.setMinSize(240, 290);
+        model.setPrefSize(240, 290);
+        model.setMaxSize(240, 290);
         buildPreviewModel(model, c);
 
-        Label name = new Label(c.name());
-        name.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px;");
-        Label rarity = new Label("◆  " + r.label);
-        rarity.setStyle("-fx-text-fill: " + r.color + "; -fx-font-weight: bold; -fx-font-size: 13px;");
         Label desc = FxUi.muted(c.description());
-        desc.setWrapText(true); desc.setMaxWidth(260); desc.setStyle("-fx-text-alignment: center;");
-        Label price = new Label("✦  " + fmt(c.price()));
-        price.setStyle("-fx-text-fill: #FACC15; -fx-font-weight: bold; -fx-font-size: 18px;");
+        desc.setWrapText(true);
+        desc.setMaxWidth(236);
+        desc.setStyle("-fx-text-alignment: center; -fx-font-size: 11px;");
 
-        VBox box = new VBox(10, centered(model), centered(name), centered(rarity),
-                centered(desc), centered(price), centered(itemAction(c)));
+        Label price = new Label("✦  " + fmt(c.price()));
+        price.setStyle("-fx-text-fill: #FACC15; -fx-font-weight: bold; -fx-font-size: 15px;");
+
+        VBox box = new VBox(10, head, centered(model), centered(desc), centered(price), itemAction(c));
         box.setAlignment(Pos.TOP_CENTER);
-        box.setPadding(new Insets(14, 18, 18, 18));
-        box.setPrefWidth(330);
-        box.setMinWidth(330);
-        box.setStyle("-fx-background-color: rgba(18,12,34,0.55); -fx-background-radius: 16;"
-                + " -fx-border-color: " + r.color + "; -fx-border-width: 2; -fx-border-radius: 16;");
-        DropShadow glow = new DropShadow(28, Color.web(r.color));
-        glow.setSpread(0.04);
+        box.setPadding(new Insets(16, 16, 16, 16));
+        box.setPrefWidth(280);
+        box.setMinWidth(280);
+        box.setMaxWidth(280);
+        box.setStyle("-fx-background-color: rgba(18,12,34,0.60); -fx-background-radius: 16;"
+                + " -fx-border-color: " + r.color + "99; -fx-border-width: 1.5; -fx-border-radius: 16;");
+        DropShadow glow = new DropShadow(16, Color.web(r.color));
+        glow.setSpread(0.02);
         box.setEffect(glow);
         return box;
     }

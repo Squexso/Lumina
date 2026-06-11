@@ -47,7 +47,7 @@ public final class ModelPreview {
         if (skinUrl == null) { show(holder, msg("Sign in to preview your skin")); return; }
 
         Image cached = CACHE.get(skinUrl);
-        if (valid(cached)) { show(holder, scene(cached, slim, capeTex, accType, accColor, yaw, pitch)); return; }
+        if (valid(cached)) { show(holder, scene(holder, cached, slim, capeTex, accType, accColor, yaw, pitch)); return; }
 
         show(holder, msg("Loading model…"));
         new Thread(() -> {
@@ -56,7 +56,7 @@ public final class ModelPreview {
                 Image skin = new Image(new ByteArrayInputStream(png));
                 if (!valid(skin)) throw new IllegalStateException("bad skin");
                 CACHE.put(skinUrl, skin);
-                Platform.runLater(() -> show(holder, scene(skin, slim, capeTex, accType, accColor, yaw, pitch)));
+                Platform.runLater(() -> show(holder, scene(holder, skin, slim, capeTex, accType, accColor, yaw, pitch)));
             } catch (Exception e) {
                 Platform.runLater(() -> show(holder, msg("Couldn't load the model.")));
             }
@@ -67,15 +67,19 @@ public final class ModelPreview {
         return img != null && !img.isError() && img.getPixelReader() != null;
     }
 
-    private static SubScene scene(Image skin, boolean slim, Image capeTex, String accType, Color accColor,
-                                  double yaw, double pitch) {
+    private static SubScene scene(StackPane holder, Image skin, boolean slim, Image capeTex,
+                                  String accType, Color accColor, double yaw, double pitch) {
         SkinView3D v = new SkinView3D(skin, slim, capeTex, accType, accColor);
         v.setView(yaw, pitch);
-        return v.buildScene(300, 420);
+        // Size the 3D viewport to the holder, so compact previews render compact.
+        double w = holder.getPrefWidth() > 0 ? holder.getPrefWidth() : 300;
+        double h = holder.getPrefHeight() > 0 ? holder.getPrefHeight() : 420;
+        return v.buildScene(w, h);
     }
 
     private static void show(StackPane holder, Node content) {
-        Circle glow = new Circle(130, Color.web("#7C3AED", 0.16));
+        double h = holder.getPrefHeight() > 0 ? holder.getPrefHeight() : 420;
+        Circle glow = new Circle(h * 0.31, Color.web("#7C3AED", 0.16));
         glow.setEffect(new GaussianBlur(45));
         holder.getChildren().setAll(glow, content);
     }
