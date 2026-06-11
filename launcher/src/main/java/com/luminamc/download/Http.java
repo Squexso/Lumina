@@ -103,13 +103,23 @@ public final class Http {
 
     /**
      * Downloads {@code url} to {@code dest}, reporting bytes via {@code onChunk}.
-     * If {@code expectedSha1} is non-null and the existing file already matches,
-     * the download is skipped.
+     * Skipped when a valid copy already exists: SHA-1 match when a hash is known,
+     * otherwise any non-empty file (game/maven artifacts are immutable — and the
+     * existing copy may be held open by an already-running game, which Windows
+     * won't let us replace anyway).
      */
     public static void download(String url, Path dest, String expectedSha1, ChunkListener onChunk)
             throws IOException, InterruptedException {
-        if (expectedSha1 != null && Files.exists(dest) && sha1(dest).equalsIgnoreCase(expectedSha1)) {
-            return; // cached and valid
+        try {
+            if (Files.exists(dest)) {
+                if (expectedSha1 != null) {
+                    if (sha1(dest).equalsIgnoreCase(expectedSha1)) return;  // cached and valid
+                } else if (Files.size(dest) > 0) {
+                    return;                                                  // cached (no hash known)
+                }
+            }
+        } catch (IOException ignored) {
+            // unreadable existing file → fall through and re-download
         }
         Files.createDirectories(dest.getParent());
         HttpRequest req = HttpRequest.newBuilder(URI.create(url))
@@ -137,7 +147,20 @@ public final class Http {
                 throw new IOException("SHA1 mismatch for " + url + " (expected " + expectedSha1 + ", got " + actual + ")");
             }
         }
-        Files.move(tmp, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        try {
+            Files.move(tmp, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException moveError) {
+            // Windows refuses to replace a file that a running game holds open (e.g. the
+            // same instance launched again with a second account). The artifact is
+            // immutable — if the existing copy is valid, use it and drop the download.
+            boolean existingValid = false;
+            try {
+                existingValid = Files.exists(dest) && Files.size(dest) > 0
+                        && (expectedSha1 == null || sha1(dest).equalsIgnoreCase(expectedSha1));
+            } catch (IOException ignored) {}
+            Files.deleteIfExists(tmp);
+            if (!existingValid) throw moveError;
+        }
     }
 
     public static String sha1(Path file) throws IOException {

@@ -279,6 +279,10 @@ public final class InstanceGridPanel extends BorderPane {
         ContextMenu m = new ContextMenu();
         MenuItem open = new MenuItem("Open / Edit");
         open.setOnAction(e -> onOpen.accept(inst));
+        // Extra session with the currently active account — lets a second account play
+        // the same instance while the first is still running (files are shared safely).
+        MenuItem second = new MenuItem("▶  Start another session");
+        second.setOnAction(e -> launchDetached(inst));
         MenuItem pin = new MenuItem(inst.pinned ? "📌  Unpin from sidebar" : "📌  Pin to sidebar");
         pin.setOnAction(e -> {
             inst.pinned = !inst.pinned;
@@ -291,8 +295,45 @@ public final class InstanceGridPanel extends BorderPane {
         MenuItem del = new MenuItem("Delete instance");
         del.setStyle("-fx-text-fill: #F87171;");
         del.setOnAction(e -> confirmDelete(inst));
-        m.getItems().addAll(open, pin, folder, new SeparatorMenuItem(), del);
+        m.getItems().addAll(open, second, pin, folder, new SeparatorMenuItem(), del);
         m.show(anchor, javafx.geometry.Side.BOTTOM, 0, 0);
+    }
+
+    /**
+     * Launches an additional session of {@code inst} with the currently active account,
+     * without touching the card's PLAY/STOP button (which tracks the first session).
+     * Used to play the same instance with a second account in parallel.
+     */
+    private void launchDetached(Instance inst) {
+        progressLabel.setText("Launching " + inst.name + " (another session)…");
+        globalProgress.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+        new LaunchService(ctx).launchAsync(inst, new LaunchService.Callbacks() {
+            @Override public void phase(String text) { progressLabel.setText(text); }
+            @Override public void progress(double fraction, String detail) {
+                globalProgress.setProgress(fraction < 0 ? ProgressBar.INDETERMINATE_PROGRESS : fraction);
+                progressLabel.setText(detail);
+            }
+            @Override public void log(String line) { /* not shown in grid view */ }
+            @Override public void started(Process process) {
+                progressLabel.setText(inst.name + " is running (another session)");
+                globalProgress.setProgress(1);
+            }
+            @Override public void finished(CrashReporter.Report report) {
+                globalProgress.setProgress(0);
+                if (report.crashed()) {
+                    progressLabel.setText(inst.name + " crashed (exit " + report.exitCode() + ")");
+                    showCrash(inst, report);
+                } else {
+                    progressLabel.setText("Session ended");
+                }
+            }
+            @Override public void failed(Throwable error) {
+                globalProgress.setProgress(0);
+                progressLabel.setText("Launch failed");
+                String msg = error.getMessage() != null ? error.getMessage() : error.toString();
+                com.luminamc.ui.LuminaDialog.error(win(), "Couldn't launch \"" + inst.name + "\"", msg);
+            }
+        });
     }
 
     private void confirmDelete(Instance inst) {

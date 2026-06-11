@@ -27,7 +27,20 @@ public final class NativeExtractor {
                         continue;
                     }
                     Path out = targetDir.resolve(Paths.get(name).getFileName().toString());
-                    Files.copy(zis, out, StandardCopyOption.REPLACE_EXISTING);
+                    // Same-size copy already there → skip (also avoids touching DLLs a
+                    // running game has locked when the instance is launched a second time).
+                    try {
+                        if (entry.getSize() >= 0 && Files.exists(out)
+                                && Files.size(out) == entry.getSize()) {
+                            continue;
+                        }
+                        Files.copy(zis, out, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException copyError) {
+                        boolean existingUsable = false;
+                        try { existingUsable = Files.exists(out) && Files.size(out) > 0; }
+                        catch (IOException ignored) {}
+                        if (!existingUsable) throw copyError;   // locked-but-present → keep it
+                    }
                 }
             }
         }
