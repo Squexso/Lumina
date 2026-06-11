@@ -68,7 +68,10 @@ public final class SkinView3D {
 
         body.setTranslateY(16);            // centre the 32-tall model on the origin
         model.getChildren().add(body);
-        model.getTransforms().addAll(rotY, rotX);
+        // Turntable order: yaw innermost (model spins upright), pitch outermost (tilts
+        // toward the camera). The reverse order makes pitch roll sideways at any yaw ≠ 0,
+        // which made the cape look crooked ("schief") as soon as the view turned a little.
+        model.getTransforms().addAll(rotX, rotY);
     }
 
     // ── public API ────────────────────────────────────────────────────────

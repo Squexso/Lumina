@@ -39,6 +39,7 @@ public final class ShopPanel extends BorderPane {
     private Label countdownLabel;                       // live next-reset countdown
     private javafx.animation.Animation claimPulse;      // pulsing claim button
     private String selectedId;                          // cosmetic shown in the shop preview
+    private com.luminamc.shop.Rarity rarityFilter;      // null = show all rarities
 
     public ShopPanel(AppContext ctx, Runnable onWalletChanged) {
         this.ctx = ctx;
@@ -405,18 +406,54 @@ public final class ShopPanel extends BorderPane {
         return new VBox(10, title, hint, cols);
     }
 
+    /** Chips that narrow the collection to one rarity (the selected chip glows in its colour). */
+    private HBox rarityChips() {
+        HBox bar = new HBox(8);
+        bar.setAlignment(Pos.CENTER_LEFT);
+        ToggleGroup group = new ToggleGroup();
+        java.util.List<com.luminamc.shop.Rarity> tiers = new java.util.ArrayList<>();
+        tiers.add(null);                                            // "All"
+        tiers.addAll(java.util.List.of(com.luminamc.shop.Rarity.values()));
+        for (com.luminamc.shop.Rarity r : tiers) {
+            ToggleButton chip = new ToggleButton(r == null ? "All" : r.label);
+            chip.getStyleClass().add("chip");
+            chip.setToggleGroup(group);
+            chip.setSelected(r == rarityFilter);
+            if (r != null) chip.setStyle("-fx-border-color: " + r.color + "55;");
+            chip.setOnAction(e -> {
+                if (!chip.isSelected()) { chip.setSelected(true); return; }
+                rarityFilter = r;
+                rebuild();
+            });
+            bar.getChildren().add(chip);
+        }
+        return bar;
+    }
+
+    private boolean passesFilter(Cosmetic c) {
+        return rarityFilter == null || c.rarity() == rarityFilter;
+    }
+
     private VBox collectionColumn() {
         FlowPane capes = new FlowPane(12, 12);
-        for (Cosmetic c : ShopCatalog.COSMETICS) capes.getChildren().add(itemCard(c));
+        ShopCatalog.COSMETICS.stream().filter(this::passesFilter)
+                .forEach(c -> capes.getChildren().add(itemCard(c)));
         FlowPane accs = new FlowPane(12, 12);
-        for (Cosmetic c : ShopCatalog.ACCESSORIES) accs.getChildren().add(itemCard(c));
+        ShopCatalog.ACCESSORIES.stream().filter(this::passesFilter)
+                .forEach(c -> accs.getChildren().add(itemCard(c)));
 
         long capesOwned = ShopCatalog.COSMETICS.stream().filter(c -> wallet.owns(c.id())).count();
         long accOwned = ShopCatalog.ACCESSORIES.stream().filter(c -> wallet.owns(c.id())).count();
 
-        VBox col = new VBox(12,
-                subHeading("Capes  (" + capesOwned + " / " + ShopCatalog.COSMETICS.size() + ")"), capes,
-                subHeading("Accessories  (" + accOwned + " / " + ShopCatalog.ACCESSORIES.size() + ")"), accs);
+        VBox col = new VBox(12, rarityChips());
+        if (!capes.getChildren().isEmpty()) {
+            col.getChildren().addAll(
+                    subHeading("Capes  (" + capesOwned + " / " + ShopCatalog.COSMETICS.size() + ")"), capes);
+        }
+        if (!accs.getChildren().isEmpty()) {
+            col.getChildren().addAll(
+                    subHeading("Accessories  (" + accOwned + " / " + ShopCatalog.ACCESSORIES.size() + ")"), accs);
+        }
         HBox.setHgrow(col, Priority.ALWAYS);
         return col;
     }
@@ -503,12 +540,33 @@ public final class ShopPanel extends BorderPane {
         card.setAlignment(Pos.TOP_CENTER);
         card.setPadding(new Insets(10));
         card.setPrefWidth(124);
-        double bw = selected ? 2.5 : 1.4;
-        card.setStyle("-fx-background-color: " + (selected ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)")
-                + "; -fx-background-radius: 12; -fx-border-color: " + r.color
-                + "; -fx-border-width: " + bw + "; -fx-border-radius: 12;");
-        card.setEffect(new DropShadow(selected ? 22 : 9, Color.web(r.color)));
+        // Calm by default — a subtle rarity-tinted border. Only the selected card (and a
+        // hovered one) glows, so a 40-item grid doesn't turn into a wall of halos.
+        String quiet = "-fx-background-color: rgba(20,14,36,0.55); -fx-background-radius: 12;"
+                + " -fx-border-color: " + r.color + "66; -fx-border-width: 1.4; -fx-border-radius: 12;";
+        String active = "-fx-background-color: rgba(255,255,255,0.06); -fx-background-radius: 12;"
+                + " -fx-border-color: " + r.color + "; -fx-border-width: 2.2; -fx-border-radius: 12;";
+        card.setStyle(selected ? active : quiet);
+        if (selected) card.setEffect(new DropShadow(22, Color.web(r.color)));
         card.setCursor(Cursor.HAND);
+        card.setOnMouseEntered(e -> {
+            if (!selected) {
+                card.setStyle(active);
+                card.setEffect(new DropShadow(14, Color.web(r.color)));
+            }
+            javafx.animation.ScaleTransition st =
+                    new javafx.animation.ScaleTransition(javafx.util.Duration.millis(120), card);
+            st.setToX(1.045); st.setToY(1.045); st.play();
+        });
+        card.setOnMouseExited(e -> {
+            if (!selected) {
+                card.setStyle(quiet);
+                card.setEffect(null);
+            }
+            javafx.animation.ScaleTransition st =
+                    new javafx.animation.ScaleTransition(javafx.util.Duration.millis(120), card);
+            st.setToX(1.0); st.setToY(1.0); st.play();
+        });
         card.setOnMouseClicked(e -> { selectedId = c.id(); rebuild(); });
         return card;
     }
