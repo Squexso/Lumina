@@ -53,6 +53,7 @@ public final class CapeArt {
 
         Color top = hex(cape.colorTop()), bot = hex(cape.colorBottom());
         base(g, top, bot);
+        deco(g, cape.id(), top, bot);     // per-cape scenery/pattern layer (behind the emblem)
         motif(g, cape.id(), top, bot);
 
         g.dispose();
@@ -76,6 +77,436 @@ public final class CapeArt {
 
         // Soft light behind the emblem area.
         glowDot(g, 50, 58, 40, a(Color.WHITE, 26));
+    }
+
+    // ── per-cape scenery / pattern layer ─────────────────────────────────
+    // Painted between the fabric base and the emblem: star fields, wave hems,
+    // falling petals, rain, embers, trims … so every cape is a little scene with
+    // its own extra colours, not just a gradient with one icon.
+
+    private static void deco(Graphics2D g, String id, Color top, Color bot) {
+        Color L  = mix(top, Color.WHITE, 0.55);
+        Color L2 = mix(top, Color.WHITE, 0.25);
+        Color D  = mix(bot, Color.BLACK, 0.35);
+        switch (id) {
+            case "lumina_cape" -> { beam(g, a(L, 46)); sprinkle(g, 11, 14, a(Color.WHITE, 150), true); }
+            case "emerald_cape" -> { lattice(g, a(L, 30)); sprinkle(g, 12, 6, a(Color.WHITE, 120), true); }
+            case "crimson_cape" -> { sash(g, a(mix(top, Color.WHITE, 0.35), 70)); hem(g, a(D, 130), 14); }
+            case "ocean_cape" -> { waveHem(g, L, L2, D); bubbles(g, 13, 6, a(Color.WHITE, 110)); }
+            case "sunset_cape" -> { skyBands(g, a(new Color(0xFDBA74), 90), a(new Color(0xF472B6), 80),
+                    a(new Color(0x6D28D9), 90)); hills(g, a(mix(D, Color.BLACK, 0.2), 200)); }
+            case "void_cape" -> { sprinkle(g, 14, 20, a(new Color(0xC4B5FD), 120), true); hem(g, a(Color.BLACK, 90), 18); }
+            case "aurora_cape" -> { sprinkle(g, 15, 12, a(Color.WHITE, 110), true);
+                    ribbon(g, 24, a(new Color(0x5EEAD4), 70)); ribbon(g, 72, a(new Color(0xA78BFA), 70)); }
+            case "galaxy_cape" -> { sprinkle(g, 16, 26, a(Color.WHITE, 140), true);
+                    glowDot(g, 18, 120, 26, a(new Color(0x7C3AED), 60));
+                    glowDot(g, 84, 28, 22, a(new Color(0x22D3EE), 45)); constellation(g, 17, a(Color.WHITE, 120)); }
+            case "phoenix_cape" -> { embers(g, 18, 12, new Color(0xFDE68A), new Color(0xFB923C));
+                    glowDot(g, 50, 140, 34, a(new Color(0xF97316), 70)); }
+            case "midnight_cape" -> { sprinkle(g, 19, 22, a(Color.WHITE, 130), true); hills(g, a(D, 220)); }
+            case "rose_cape" -> { petalsFall(g, 20, 8, a(mix(L, Color.WHITE, 0.2), 170)); hem(g, a(D, 110), 12); }
+            case "amber_cape" -> { sash(g, a(L, 55)); bubbles(g, 21, 4, a(mix(L, Color.WHITE, 0.3), 130)); }
+            case "frost_cape" -> { sprinkle(g, 22, 16, a(Color.WHITE, 150), true); shardsHem(g, a(mix(L, Color.WHITE, 0.3), 170)); }
+            case "venom_cape" -> { dripsTop(g, 23, a(L, 200)); sprinkle(g, 24, 5, a(L, 110), true); }
+            case "celestial_cape" -> { constellation(g, 25, a(Color.WHITE, 140)); sprinkle(g, 26, 16, a(Color.WHITE, 130), true); }
+            case "slate_cape" -> { pinstripes(g, 30, a(Color.WHITE, 60)); hem(g, a(D, 90), 10); }
+            case "moss_cape" -> { leavesFall(g, 27, 8, a(L, 160)); hem(g, a(D, 120), 12); }
+            case "sand_cape" -> { dunesHem(g, a(L2, 140), a(D, 130)); sprinkle(g, 28, 6, a(Color.WHITE, 80), true); }
+            case "coal_cape" -> { sprinkle(g, 29, 18, a(mix(L2, Color.WHITE, 0.2), 60), false); hem(g, a(Color.BLACK, 90), 14); }
+            case "lavender_cape" -> { petalsFall(g, 31, 10, a(mix(L, Color.WHITE, 0.15), 160)); }
+            case "mint_cape" -> { pinstripes(g, 26, a(Color.WHITE, 70)); leavesFall(g, 32, 4, a(L, 140)); }
+            case "honey_cape" -> { hexLattice(g, a(mix(L, Color.WHITE, 0.1), 46)); }
+            case "berry_cape" -> { berriesFall(g, 33, a(L, 170), a(mix(L, Color.WHITE, 0.3), 200)); }
+            case "flame_cape" -> { flameHem(g, mix(L, Color.WHITE, 0.15), L2); embers(g, 34, 8, mix(L, Color.WHITE, 0.4), L); }
+            case "sky_cape" -> { skyBands(g, a(Color.WHITE, 40), a(new Color(0xBAE6FD), 60), a(new Color(0x0284C7), 60));
+                    birds(g, a(Color.WHITE, 200)); }
+            case "sakura_cape" -> { petalsFall(g, 35, 14, a(mix(L, Color.WHITE, 0.2), 190)); branch(g, a(D, 220)); }
+            case "storm_cape" -> { rain(g, 36, a(mix(L, Color.WHITE, 0.3), 130)); hem(g, a(Color.BLACK, 80), 12); }
+            case "tropic_cape" -> { fronds(g, a(mix(L, D, 0.25), 190)); dot(g, 78, 28, 6, a(new Color(0xFDE68A), 220)); }
+            case "dawn_cape" -> { skyBands(g, a(new Color(0xFDE68A), 80), a(new Color(0xFB7185), 70),
+                    a(new Color(0x4C1D95), 80)); birds(g, a(Color.WHITE, 180)); }
+            case "royal_cape" -> { trim(g, a(new Color(0xFCD34D), 220)); diamondsField(g, 37, a(new Color(0xFCD34D), 70)); }
+            case "bloodmoon_cape" -> { sprinkle(g, 38, 16, a(mix(L, Color.WHITE, 0.3), 120), true);
+                    glowDot(g, 50, 60, 44, a(mix(L, Color.WHITE, 0.1), 50)); }
+            case "glacier_cape" -> { shardsHem(g, a(mix(L, Color.WHITE, 0.4), 180)); sprinkle(g, 39, 10, a(Color.WHITE, 130), true); }
+            case "eclipse_cape" -> { sprinkle(g, 40, 18, a(Color.WHITE, 120), true);
+                    glowDot(g, 50, 60, 42, a(new Color(0xFCD34D), 40)); }
+            case "dragonfire_cape" -> { scales(g, a(D, 160)); embers(g, 41, 8, new Color(0xFDE68A), new Color(0xFB923C)); }
+            case "nether_cape" -> { trim(g, a(mix(D, Color.BLACK, 0.2), 220)); sprinkle(g, 42, 12, a(new Color(0xC084FC), 140), true); }
+            case "prism_cape" -> rainbowBeams(g);
+            case "singularity_cape" -> { streakStars(g, 43, a(Color.WHITE, 150)); glowDot(g, 50, 60, 40, a(L, 55)); }
+            case "solar_cape" -> { rays(g, a(new Color(0xFDE047), 110)); embers(g, 44, 6, new Color(0xFFF7CC), new Color(0xFDE047)); }
+            case "abyss_cape" -> { godRays(g, a(mix(L, Color.WHITE, 0.2), 50)); bubbles(g, 45, 7, a(L, 120));
+                    hem(g, a(Color.BLACK, 110), 20); }
+            case "spectral_cape" -> { ribbon(g, 28, a(mix(L, Color.WHITE, 0.4), 60)); ribbon(g, 70, a(mix(L, Color.WHITE, 0.4), 50));
+                    sprinkle(g, 46, 10, a(Color.WHITE, 140), true); }
+            default -> { }
+        }
+    }
+
+    // ── scenery helpers ──────────────────────────────────────────────────
+
+    /** True if a point sits in the emblem zone (kept clear of scatter). */
+    private static boolean inEmblem(double x, double y) {
+        double dx = (x - 50) / 32.0, dy = (y - 62) / 38.0;
+        return dx * dx + dy * dy < 1;
+    }
+
+    /** Scattered tiny stars/dots (skips the emblem area when asked to). */
+    private static void sprinkle(Graphics2D g, long seed, int n, Color c, boolean sparkles) {
+        java.util.Random r = new java.util.Random(seed);
+        for (int i = 0; i < n; i++) {
+            double x = 7 + r.nextDouble() * 86, y = 7 + r.nextDouble() * 146;
+            if (inEmblem(x, y)) continue;
+            double s = 0.8 + r.nextDouble() * 1.4;
+            if (sparkles && i % 4 == 0) sparkle(g, x, y, s * 2.0, c);
+            else dot(g, x, y, s, c);
+        }
+    }
+
+    /** A soft vertical light beam behind the emblem. */
+    private static void beam(Graphics2D g, Color c) {
+        g.setPaint(new LinearGradientPaint(new Point2D.Double(0, 8), new Point2D.Double(0, 120),
+                new float[]{0f, 1f}, new Color[]{c, a(c, 0)}));
+        g.fillRect(36, 8, 28, 112);
+    }
+
+    /** A translucent band across the bottom hem (with a thin top edge line). */
+    private static void hem(Graphics2D g, Color c, double height) {
+        g.setColor(c);
+        g.fillRect(0, (int) (160 - height), 100, (int) height);
+        g.setColor(a(Color.WHITE, 26));
+        g.fill(new java.awt.geom.Rectangle2D.Double(0, 160 - height, 100, 1.2));
+    }
+
+    /** A diagonal sash across the upper cape. */
+    private static void sash(Graphics2D g, Color c) {
+        g.setColor(c);
+        g.fill(P(0, 26, 100, 8, 100, 20, 0, 38));
+    }
+
+    /** Layered filled waves rising from the hem. */
+    private static void waveHem(Graphics2D g, Color c1, Color c2, Color c3) {
+        Color[] cs = {a(c1, 120), a(c2, 150), a(c3, 190)};
+        double[] ys = {118, 130, 142};
+        for (int i = 0; i < 3; i++) {
+            Path2D w = new Path2D.Double();
+            w.moveTo(0, ys[i]);
+            for (int s = 0; s < 5; s++) {
+                double x0 = s * 25, mid = x0 + 12.5;
+                w.quadTo(mid, ys[i] + (s % 2 == 0 ? -8 : 8), x0 + 25, ys[i]);
+            }
+            w.lineTo(100, 160); w.lineTo(0, 160); w.closePath();
+            g.setColor(cs[i]);
+            g.fill(w);
+        }
+    }
+
+    private static void bubbles(Graphics2D g, long seed, int n, Color c) {
+        java.util.Random r = new java.util.Random(seed);
+        stroke(g, 1.2);
+        g.setColor(c);
+        for (int i = 0; i < n; i++) {
+            double x = 10 + r.nextDouble() * 80, y = 96 + r.nextDouble() * 52, s = 1.2 + r.nextDouble() * 2.2;
+            g.draw(new Ellipse2D.Double(x - s, y - s, s * 2, s * 2));
+        }
+    }
+
+    /** Full-cape horizontal colour wash (kept translucent so the base shows through). */
+    private static void skyBands(Graphics2D g, Color a, Color b, Color c) {
+        g.setPaint(new LinearGradientPaint(new Point2D.Double(0, 0), new Point2D.Double(0, 160),
+                new float[]{0f, 0.5f, 1f}, new Color[]{a, b, c}));
+        g.fillRect(0, 0, 100, 160);
+    }
+
+    /** Dark rolling hills along the hem. */
+    private static void hills(Graphics2D g, Color c) {
+        Path2D h = new Path2D.Double();
+        h.moveTo(0, 140);
+        h.quadTo(25, 124, 50, 138);
+        h.quadTo(75, 150, 100, 132);
+        h.lineTo(100, 160); h.lineTo(0, 160); h.closePath();
+        g.setColor(c);
+        g.fill(h);
+    }
+
+    /** A soft vertical aurora ribbon at x. */
+    private static void ribbon(Graphics2D g, double x, Color c) {
+        stroke(g, 9);
+        g.setColor(c);
+        Path2D r = new Path2D.Double();
+        r.moveTo(x, 12);
+        r.quadTo(x - 9, 52, x + 2, 92);
+        r.quadTo(x + 8, 122, x - 4, 150);
+        g.draw(r);
+    }
+
+    /** A small connected constellation. */
+    private static void constellation(Graphics2D g, long seed, Color c) {
+        java.util.Random r = new java.util.Random(seed);
+        double px = 0, py = 0;
+        stroke(g, 0.9);
+        for (int i = 0; i < 6; i++) {
+            double x = 12 + r.nextDouble() * 76, y = 10 + r.nextDouble() * 50;
+            if (inEmblem(x, y)) continue;
+            dot(g, x, y, 1.4, c);
+            if (px != 0) { g.setColor(a(c, 80)); g.draw(new java.awt.geom.Line2D.Double(px, py, x, y)); }
+            px = x; py = y;
+        }
+    }
+
+    /** Rising ember specks in two tones. */
+    private static void embers(Graphics2D g, long seed, int n, Color bright, Color warm) {
+        java.util.Random r = new java.util.Random(seed);
+        for (int i = 0; i < n; i++) {
+            double x = 10 + r.nextDouble() * 80, y = 90 + r.nextDouble() * 60;
+            if (inEmblem(x, y)) continue;
+            dot(g, x, y, 0.9 + r.nextDouble() * 1.3, a(i % 3 == 0 ? bright : warm, 120 + r.nextInt(100)));
+        }
+    }
+
+    /** Falling petals scattered over the cape. */
+    private static void petalsFall(Graphics2D g, long seed, int n, Color c) {
+        java.util.Random r = new java.util.Random(seed);
+        g.setColor(c);
+        for (int i = 0; i < n; i++) {
+            double x = 8 + r.nextDouble() * 84, y = 8 + r.nextDouble() * 144;
+            if (inEmblem(x, y)) continue;
+            g.fill(petal(x, y, 4.5 + r.nextDouble() * 2, 2.6, r.nextDouble() * 360));
+        }
+    }
+
+    private static void leavesFall(Graphics2D g, long seed, int n, Color c) {
+        petalsFall(g, seed, n, c);
+    }
+
+    private static void berriesFall(Graphics2D g, long seed, Color c, Color shine) {
+        java.util.Random r = new java.util.Random(seed);
+        for (int i = 0; i < 7; i++) {
+            double x = 10 + r.nextDouble() * 80, y = 10 + r.nextDouble() * 140;
+            if (inEmblem(x, y)) continue;
+            dot(g, x, y, 2.6, c);
+            dot(g, x - 0.8, y - 0.8, 0.8, shine);
+        }
+    }
+
+    /** Slime drips running from the top edge. */
+    private static void dripsTop(Graphics2D g, long seed, Color c) {
+        java.util.Random r = new java.util.Random(seed);
+        g.setColor(c);
+        g.fillRect(0, 0, 100, 10);
+        for (int i = 0; i < 6; i++) {
+            double x = 8 + i * 16 + r.nextDouble() * 6, len = 10 + r.nextDouble() * 22;
+            g.fill(new RoundRectangle2D.Double(x - 2, 8, 4, len, 4, 4));
+            dot(g, x, 8 + len, 2.6, c);
+        }
+    }
+
+    /** Two thin vertical pinstripes. */
+    private static void pinstripes(Graphics2D g, double x, Color c) {
+        g.setColor(c);
+        g.fill(new java.awt.geom.Rectangle2D.Double(x, 6, 1.6, 148));
+        g.fill(new java.awt.geom.Rectangle2D.Double(x + 5, 6, 0.9, 148));
+    }
+
+    /** A faint diamond lattice over the whole cape. */
+    private static void lattice(Graphics2D g, Color c) {
+        stroke(g, 0.8);
+        g.setColor(c);
+        for (int i = -8; i < 10; i++) {
+            g.draw(new java.awt.geom.Line2D.Double(i * 14, 0, i * 14 + 70, 160));
+            g.draw(new java.awt.geom.Line2D.Double(i * 14 + 70, 0, i * 14, 160));
+        }
+    }
+
+    /** A faint honeycomb lattice. */
+    private static void hexLattice(Graphics2D g, Color c) {
+        stroke(g, 1.0);
+        g.setColor(c);
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 6; col++) {
+                double cx = 8 + col * 17 + (row % 2 == 0 ? 0 : 8.5), cy = 10 + row * 20;
+                if (inEmblem(cx, cy)) continue;
+                g.draw(hexagon(cx, cy, 8));
+            }
+        }
+    }
+
+    /** Jagged ice shards rising from the hem. */
+    private static void shardsHem(Graphics2D g, Color c) {
+        g.setColor(c);
+        for (int i = 0; i < 6; i++) {
+            double x = 4 + i * 17;
+            g.fill(P(x, 160, x + 7, 138 - (i % 2) * 8, x + 14, 160));
+        }
+    }
+
+    /** Dune bands along the hem. */
+    private static void dunesHem(Graphics2D g, Color c1, Color c2) {
+        Path2D d1 = new Path2D.Double();
+        d1.moveTo(0, 132); d1.quadTo(30, 120, 60, 132); d1.quadTo(82, 140, 100, 130);
+        d1.lineTo(100, 160); d1.lineTo(0, 160); d1.closePath();
+        g.setColor(c1); g.fill(d1);
+        Path2D d2 = new Path2D.Double();
+        d2.moveTo(0, 148); d2.quadTo(40, 138, 100, 150);
+        d2.lineTo(100, 160); d2.lineTo(0, 160); d2.closePath();
+        g.setColor(c2); g.fill(d2);
+    }
+
+    /** Flame tongues licking up from the hem. */
+    private static void flameHem(Graphics2D g, Color bright, Color warm) {
+        for (int i = 0; i < 5; i++) {
+            double x = 10 + i * 20;
+            Path2D f = new Path2D.Double();
+            f.moveTo(x - 8, 160);
+            f.quadTo(x - 4, 134 - (i % 2) * 10, x, 124 - (i % 2) * 8);
+            f.quadTo(x + 4, 136, x + 8, 160);
+            f.closePath();
+            g.setColor(a(warm, 180)); g.fill(f);
+            Path2D in = new Path2D.Double();
+            in.moveTo(x - 4, 160);
+            in.quadTo(x, 142, x, 138);
+            in.quadTo(x + 2, 146, x + 4, 160);
+            in.closePath();
+            g.setColor(a(bright, 200)); g.fill(in);
+        }
+    }
+
+    /** A couple of distant birds. */
+    private static void birds(Graphics2D g, Color c) {
+        stroke(g, 1.6);
+        g.setColor(c);
+        double[][] pos = {{26, 26}, {38, 20}, {70, 30}};
+        for (double[] b : pos) {
+            Path2D bird = new Path2D.Double();
+            bird.moveTo(b[0] - 4, b[1]); bird.quadTo(b[0] - 1, b[1] - 3.4, b[0], b[1]);
+            bird.moveTo(b[0], b[1]);     bird.quadTo(b[0] + 3, b[1] - 3.4, b[0] + 4, b[1]);
+            g.draw(bird);
+        }
+    }
+
+    /** A blossom branch reaching in from the top-left corner. */
+    private static void branch(Graphics2D g, Color c) {
+        stroke(g, 2.4);
+        g.setColor(c);
+        Path2D b = new Path2D.Double();
+        b.moveTo(-2, 10);
+        b.quadTo(18, 16, 34, 12);
+        g.draw(b);
+        stroke(g, 1.6);
+        g.draw(new java.awt.geom.Line2D.Double(16, 14, 22, 22));
+        g.draw(new java.awt.geom.Line2D.Double(28, 13, 33, 20));
+    }
+
+    /** Diagonal rain streaks over the upper cape. */
+    private static void rain(Graphics2D g, long seed, Color c) {
+        java.util.Random r = new java.util.Random(seed);
+        stroke(g, 1.1);
+        g.setColor(c);
+        for (int i = 0; i < 16; i++) {
+            double x = 6 + r.nextDouble() * 88, y = 6 + r.nextDouble() * 120, len = 5 + r.nextDouble() * 5;
+            if (inEmblem(x, y)) continue;
+            g.draw(new java.awt.geom.Line2D.Double(x, y, x - len * 0.35, y + len));
+        }
+    }
+
+    /** Palm fronds reaching in from the bottom corners. */
+    private static void fronds(Graphics2D g, Color c) {
+        stroke(g, 2.6);
+        g.setColor(c);
+        for (int side = 0; side < 2; side++) {
+            double bx = side == 0 ? 2 : 98, dir = side == 0 ? 1 : -1;
+            for (int i = 0; i < 3; i++) {
+                Path2D f = new Path2D.Double();
+                f.moveTo(bx, 158);
+                f.quadTo(bx + dir * (10 + i * 8), 138 - i * 8, bx + dir * (22 + i * 10), 128 - i * 12);
+                g.draw(f);
+            }
+        }
+    }
+
+    /** A thin gold trim border with corner studs. */
+    private static void trim(Graphics2D g, Color c) {
+        stroke(g, 2.2);
+        g.setColor(c);
+        g.draw(new RoundRectangle2D.Double(4, 4, 92, 152, 10, 10));
+        dot(g, 9, 9, 1.8, c);
+        dot(g, 91, 9, 1.8, c);
+        dot(g, 9, 151, 1.8, c);
+        dot(g, 91, 151, 1.8, c);
+    }
+
+    /** A loose field of tiny diamonds. */
+    private static void diamondsField(Graphics2D g, long seed, Color c) {
+        java.util.Random r = new java.util.Random(seed);
+        g.setColor(c);
+        for (int i = 0; i < 10; i++) {
+            double x = 12 + r.nextDouble() * 76, y = 12 + r.nextDouble() * 136;
+            if (inEmblem(x, y)) continue;
+            g.fill(P(x, y - 2.4, x + 1.8, y, x, y + 2.4, x - 1.8, y));
+        }
+    }
+
+    /** Overlapping scale arcs along the lower cape. */
+    private static void scales(Graphics2D g, Color c) {
+        stroke(g, 1.4);
+        g.setColor(c);
+        for (int row = 0; row < 4; row++) {
+            double y = 112 + row * 11;
+            for (int col = 0; col < 7; col++) {
+                double x = (row % 2 == 0 ? 4 : 11) + col * 14;
+                g.draw(new java.awt.geom.Arc2D.Double(x, y, 14, 12, 180, 180, java.awt.geom.Arc2D.OPEN));
+            }
+        }
+    }
+
+    /** Translucent rainbow beams sweeping diagonally across the cape. */
+    private static void rainbowBeams(Graphics2D g) {
+        Color[] cs = {new Color(0xF87171), new Color(0xFB923C), new Color(0xFDE047),
+                new Color(0x4ADE80), new Color(0x60A5FA), new Color(0xA78BFA)};
+        AffineTransform t = g.getTransform();
+        g.rotate(Math.toRadians(-24), 50, 80);
+        for (int i = 0; i < cs.length; i++) {
+            g.setColor(a(cs[i], 46));
+            g.fill(new java.awt.geom.Rectangle2D.Double(-30, 28 + i * 16, 160, 11));
+        }
+        g.setTransform(t);
+    }
+
+    /** Stars with little streaks pulled toward the centre (gravity!). */
+    private static void streakStars(Graphics2D g, long seed, Color c) {
+        java.util.Random r = new java.util.Random(seed);
+        stroke(g, 1.0);
+        for (int i = 0; i < 16; i++) {
+            double x = 8 + r.nextDouble() * 84, y = 8 + r.nextDouble() * 144;
+            if (inEmblem(x, y)) continue;
+            double dx = 50 - x, dy = 60 - y, len = Math.hypot(dx, dy);
+            dot(g, x, y, 1.0 + r.nextDouble(), c);
+            g.setColor(a(c, 80));
+            g.draw(new java.awt.geom.Line2D.Double(x, y, x + dx / len * 6, y + dy / len * 6));
+        }
+    }
+
+    /** Long rays emanating from the emblem. */
+    private static void rays(Graphics2D g, Color c) {
+        stroke(g, 1.8);
+        g.setColor(c);
+        for (int i = 0; i < 12; i++) {
+            double ang = Math.toRadians(i * 30 + 15);
+            g.draw(new java.awt.geom.Line2D.Double(
+                    50 + Math.cos(ang) * 26, 60 + Math.sin(ang) * 26,
+                    50 + Math.cos(ang) * (38 + (i % 2) * 8), 60 + Math.sin(ang) * (38 + (i % 2) * 8)));
+        }
+    }
+
+    /** Soft god-rays slanting down from the top. */
+    private static void godRays(Graphics2D g, Color c) {
+        for (int i = 0; i < 3; i++) {
+            double x = 22 + i * 24;
+            g.setPaint(new LinearGradientPaint(new Point2D.Double(0, 0), new Point2D.Double(0, 110),
+                    new float[]{0f, 1f}, new Color[]{c, a(c, 0)}));
+            g.fill(P(x, 0, x + 9, 0, x + 20, 110, x + 6, 110));
+        }
     }
 
     // ── per-cape emblems ─────────────────────────────────────────────────

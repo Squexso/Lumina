@@ -435,27 +435,47 @@ public final class ShopPanel extends BorderPane {
     }
 
     private VBox collectionColumn() {
-        FlowPane capes = new FlowPane(12, 12);
-        ShopCatalog.COSMETICS.stream().filter(this::passesFilter)
-                .forEach(c -> capes.getChildren().add(itemCard(c)));
-        FlowPane accs = new FlowPane(12, 12);
-        ShopCatalog.ACCESSORIES.stream().filter(this::passesFilter)
-                .forEach(c -> accs.getChildren().add(itemCard(c)));
+        VBox col = new VBox(14, rarityChips());
 
-        long capesOwned = ShopCatalog.COSMETICS.stream().filter(c -> wallet.owns(c.id())).count();
-        long accOwned = ShopCatalog.ACCESSORIES.stream().filter(c -> wallet.owns(c.id())).count();
-
-        VBox col = new VBox(12, rarityChips());
-        if (!capes.getChildren().isEmpty()) {
-            col.getChildren().addAll(
-                    subHeading("Capes  (" + capesOwned + " / " + ShopCatalog.COSMETICS.size() + ")"), capes);
+        // Capes grouped by rarity — one labelled section per tier, so the big
+        // collection reads as a tidy catalogue instead of one endless wall.
+        for (com.luminamc.shop.Rarity r : com.luminamc.shop.Rarity.values()) {
+            if (rarityFilter != null && r != rarityFilter) continue;
+            var tier = ShopCatalog.COSMETICS.stream().filter(c -> c.rarity() == r).toList();
+            if (tier.isEmpty()) continue;
+            long owned = tier.stream().filter(c -> wallet.owns(c.id())).count();
+            FlowPane flow = new FlowPane(12, 12);
+            tier.forEach(c -> flow.getChildren().add(itemCard(c)));
+            col.getChildren().addAll(tierHeading(r, owned, tier.size()), flow);
         }
-        if (!accs.getChildren().isEmpty()) {
+
+        var accs = ShopCatalog.ACCESSORIES.stream().filter(this::passesFilter).toList();
+        if (!accs.isEmpty()) {
+            long accOwned = accs.stream().filter(c -> wallet.owns(c.id())).count();
+            FlowPane flow = new FlowPane(12, 12);
+            accs.forEach(c -> flow.getChildren().add(itemCard(c)));
             col.getChildren().addAll(
-                    subHeading("Accessories  (" + accOwned + " / " + ShopCatalog.ACCESSORIES.size() + ")"), accs);
+                    subHeading("ACCESSORIES   ·   " + accOwned + " / " + ShopCatalog.ACCESSORIES.size()), flow);
         }
         HBox.setHgrow(col, Priority.ALWAYS);
         return col;
+    }
+
+    /** A rarity section header: coloured dot + name, owned count, and a hairline rule. */
+    private HBox tierHeading(com.luminamc.shop.Rarity r, long owned, int total) {
+        Label dot = new Label("●");
+        dot.setStyle("-fx-text-fill: " + r.color + "; -fx-font-size: 10px;");
+        Label name = new Label(r.label.toUpperCase());
+        name.setStyle("-fx-text-fill: " + r.color + "; -fx-font-weight: bold; -fx-font-size: 12px;");
+        Label count = FxUi.muted(owned + " / " + total);
+        Region rule = new Region();
+        rule.setPrefHeight(1);
+        rule.setStyle("-fx-background-color: linear-gradient(to right, " + r.color + "55, transparent);");
+        HBox.setHgrow(rule, Priority.ALWAYS);
+        HBox h = new HBox(8, dot, name, count, rule);
+        h.setAlignment(Pos.CENTER_LEFT);
+        h.setPadding(new Insets(6, 0, 0, 0));
+        return h;
     }
 
     private static Label subHeading(String s) {
