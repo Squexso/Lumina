@@ -93,6 +93,10 @@ public final class LauncherConfig {
     /** History of every code redemption (newest appended last), for the shop log. */
     public java.util.List<com.luminamc.shop.RedemptionEntry> redemptionLog = new java.util.ArrayList<>();
 
+    // ── Server favorites (Quick-Connect) ───────────────────────────────────
+    /** Saved servers for one-click join from the Servers panel. */
+    public java.util.List<com.luminamc.servers.ServerFavorite> serverFavorites = new java.util.ArrayList<>();
+
     // ── Daily login streak ─────────────────────────────────────────────────
     /** Current consecutive daily-claim count (0 = never claimed). */
     public int streakDay = 0;

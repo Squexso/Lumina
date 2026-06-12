@@ -39,13 +39,18 @@ public final class LaunchService {
     }
 
     public Thread launchAsync(Instance inst, Callbacks cb) {
-        Thread t = new Thread(() -> run(inst, cb), "luminamc-launch-" + inst.id);
+        return launchAsync(inst, null, cb);
+    }
+
+    /** Launches and, when {@code joinServer} is set, connects straight to that server. */
+    public Thread launchAsync(Instance inst, String joinServer, Callbacks cb) {
+        Thread t = new Thread(() -> run(inst, joinServer, cb), "luminamc-launch-" + inst.id);
         t.setDaemon(true);
         t.start();
         return t;
     }
 
-    private void run(Instance inst, Callbacks cb) {
+    private void run(Instance inst, String joinServer, Callbacks cb) {
         try {
             // 1. Account / token refresh.
             Account account = ctx.auth.active();
@@ -162,8 +167,11 @@ public final class LaunchService {
             com.luminamc.game.LuminaCosmetics.writeEquipped(inst, ctx.config.equippedCape, ctx.config.equippedAccessory);
 
             fx(cb, c -> { c.progress(1.0, "Ready"); c.phase("Launching Minecraft…"); });
+            if (joinServer != null && !joinServer.isBlank()) {
+                fx(cb, c -> c.log("Quick Play: joining " + joinServer + " after launch."));
+            }
             List<String> captured = Collections.synchronizedList(new CopyOnWriteArrayList<>());
-            Process process = new GameLauncher().launch(inst, rv, acc, javaExe, line -> {
+            Process process = new GameLauncher().launch(inst, rv, acc, javaExe, joinServer, line -> {
                 captured.add(line);
                 fx(cb, c -> c.log(line));
             });

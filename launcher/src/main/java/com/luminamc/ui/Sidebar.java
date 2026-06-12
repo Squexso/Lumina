@@ -23,6 +23,7 @@ public final class Sidebar extends VBox {
         void home();
         void skins();
         void shop();
+        void servers();
         void settings();
         void newInstance();
         void account();
@@ -41,6 +42,7 @@ public final class Sidebar extends VBox {
     private final Button homeBtn = navItem("◳", "INSTANCES", () -> select("home"));
     private final Button skinsBtn = navItem("🧥", "WARDROBE", () -> select("skins"));
     private final Button shopBtn = navItem("✦", "SHOP", () -> select("shop"));
+    private final Button serversBtn = navItem("🌐", "SERVERS", () -> select("servers"));
     private final Button settingsBtn = navItem("⚙", "SETTINGS", () -> select("settings"));
 
     private final Label tokenBalance = new Label("0");
@@ -255,7 +257,7 @@ public final class Sidebar extends VBox {
     private VBox navSection() {
         Label header = new Label("LIBRARY");
         header.getStyleClass().add("nav-header");
-        VBox box = new VBox(4, header, homeBtn, skinsBtn, shopBtn, settingsBtn);
+        VBox box = new VBox(4, header, homeBtn, skinsBtn, shopBtn, serversBtn, settingsBtn);
         box.setPadding(new Insets(4, 0, 0, 0));
         return box;
     }
@@ -266,6 +268,7 @@ public final class Sidebar extends VBox {
             case "home"     -> nav.home();
             case "skins"    -> nav.skins();
             case "shop"     -> nav.shop();
+            case "servers"  -> nav.servers();
             case "settings" -> nav.settings();
         }
     }
@@ -275,6 +278,7 @@ public final class Sidebar extends VBox {
         homeBtn.pseudoClassStateChanged(ACTIVE, "home".equals(key));
         skinsBtn.pseudoClassStateChanged(ACTIVE, "skins".equals(key));
         shopBtn.pseudoClassStateChanged(ACTIVE, "shop".equals(key));
+        serversBtn.pseudoClassStateChanged(ACTIVE, "servers".equals(key));
         settingsBtn.pseudoClassStateChanged(ACTIVE, "settings".equals(key));
     }
 

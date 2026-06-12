@@ -43,6 +43,7 @@ public final class MainWindow {
             @Override public void home()          { showHome(); }
             @Override public void skins()         { showSkins(); }
             @Override public void shop()          { showShop(); }
+            @Override public void servers()       { showServers(); }
             @Override public void settings()      { showSettings(); }
             @Override public void newInstance()   { newInstance(); }
             @Override public void account()       { accounts(); }
@@ -121,6 +122,12 @@ public final class MainWindow {
         sidebar.setActive("shop");
         current = null;
         setContent(new ShopPanel(ctx, sidebar::refreshTokens));
+    }
+
+    private void showServers() {
+        sidebar.setActive("servers");
+        current = null;
+        setContent(new ServersPanel(ctx));
     }
 
     private void showSettings() {

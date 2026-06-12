@@ -137,12 +137,24 @@ public final class GameLauncher {
      */
     public Process launch(Instance inst, ResolvedVersion rv, Account account, String javaExe,
                           Consumer<String> logSink) throws IOException {
+        return launch(inst, rv, account, javaExe, null, logSink);
+    }
+
+    /**
+     * Launches the game and, when {@code joinServer} is set ({@code host[:port]}),
+     * connects straight to that server (Quick Play on 1.20+, {@code --server} before).
+     */
+    public Process launch(Instance inst, ResolvedVersion rv, Account account, String javaExe,
+                          String joinServer, Consumer<String> logSink) throws IOException {
         Path gameDir = LuminaPaths.instanceGameDir(inst.id);
         Files.createDirectories(gameDir);
         ensureDefaultOptions(gameDir);
         applyFpsBoost(gameDir, inst);
 
         List<String> cmd = buildCommand(inst, rv, account, javaExe);
+        if (joinServer != null && !joinServer.isBlank()) {
+            cmd.addAll(quickPlayArgs(inst, joinServer.trim()));
+        }
         ProcessBuilder pb = new ProcessBuilder(cmd)
                 .directory(gameDir.toFile())
                 .redirectErrorStream(true);
@@ -164,5 +176,31 @@ public final class GameLauncher {
         reader.start();
 
         return process;
+    }
+
+    /**
+     * The join-on-launch arguments for {@code address} ({@code host[:port]}):
+     * {@code --quickPlayMultiplayer} on 1.20+ (and the next-gen 26.x scheme),
+     * the classic {@code --server}/{@code --port} pair on older versions.
+     */
+    private static List<String> quickPlayArgs(Instance inst, String address) {
+        boolean modern = true;
+        try {
+            String[] parts = (inst.mcVersion == null ? "" : inst.mcVersion).split("\\.");
+            int major = Integer.parseInt(parts[0].replaceAll("\\D", ""));
+            if (major == 1 && parts.length > 1) {
+                modern = Integer.parseInt(parts[1].replaceAll("\\D", "")) >= 20;
+            }
+        } catch (Exception ignored) { /* unparsable → assume modern */ }
+        if (modern) return List.of("--quickPlayMultiplayer", address);
+
+        String host = address;
+        int port = 25565;
+        int colon = address.lastIndexOf(':');
+        if (colon > 0) {
+            host = address.substring(0, colon);
+            try { port = Integer.parseInt(address.substring(colon + 1)); } catch (NumberFormatException ignored) {}
+        }
+        return List.of("--server", host, "--port", String.valueOf(port));
     }
 }
