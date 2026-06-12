@@ -32,8 +32,17 @@ public final class ServerPinger {
         public static Status offline() { return new Status(false, "", 0, 0, "", 0); }
     }
 
-    /** Pings {@code host[:port]}; never throws — unreachable servers come back offline. */
+    /** Pings {@code host[:port]}; never throws — unreachable servers come back offline.
+     *  One transient failure (network blip, brief throttle) is retried once before
+     *  the server is reported offline. */
     public static Status ping(String address) {
+        Status first = pingOnce(address);
+        if (first.online()) return first;
+        try { Thread.sleep(400); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        return pingOnce(address);
+    }
+
+    private static Status pingOnce(String address) {
         try {
             String host = address.trim();
             int port = 25565;
@@ -153,6 +162,9 @@ public final class ServerPinger {
             String target = parts[3].endsWith(".") ? parts[3].substring(0, parts[3].length() - 1) : parts[3];
             return new String[]{target, parts[2]};
         } catch (Exception e) {
+            if (Boolean.getBoolean("luminamc.pingDebug")) {
+                System.out.println("[ping] SRV lookup for " + host + " failed: " + e);
+            }
             return null;
         }
     }

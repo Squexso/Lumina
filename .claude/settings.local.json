@@ -176,7 +176,8 @@
       "Bash(curl -s https://api.github.com/repos/Squexso/Lumina/releases/latest)",
       "Bash(curl -fsSL https://www.gnu.org/licenses/gpl-3.0.txt -o LICENSE.txt)",
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img=[System.Drawing.Image]::FromFile\\(\"C:\\\\Users\\\\lochd\\\\IdeaProjects\\\\Lumina\\\\lumina-multiloader\\\\common\\\\src\\\\main\\\\resources\\\\assets\\\\lumina\\\\textures\\\\entity\\\\lumina_cape.png\"\\); \"lumina_cape.png: $\\($img.Width\\) x $\\($img.Height\\)\"; $img.Dispose\\(\\))",
-      "Bash(grep -vE \"^\\\\s*$\")"
+      "Bash(grep -vE \"^\\\\s*$\")",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Programs\\\\LuminaMC\\\\runtime\\\\bin\\\\java.exe\" --list-modules 2>&1 | Select-String -Pattern \"naming\")"
     ]
   }
 }
