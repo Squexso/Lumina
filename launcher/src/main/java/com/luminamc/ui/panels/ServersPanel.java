@@ -62,7 +62,10 @@ public final class ServersPanel extends BorderPane {
 
         Button refresh = new Button("⟳  Refresh");
         refresh.getStyleClass().add("ghost-button");
-        refresh.setOnAction(e -> rebuild());
+        refresh.setOnAction(e -> {
+            if (pingActions.isEmpty()) rebuild();
+            else List.copyOf(pingActions).forEach(Runnable::run);   // re-ping in place, no flicker
+        });
 
         Button add = new Button("✛   Add Server");
         add.getStyleClass().add("create-button");
@@ -94,8 +97,24 @@ public final class ServersPanel extends BorderPane {
 
     // ── list ─────────────────────────────────────────────────────────────
 
+    /** One status-recheck per row; re-run by Refresh and the 30-second auto-refresh. */
+    private final List<Runnable> pingActions = new java.util.ArrayList<>();
+    private javafx.animation.Timeline autoRefresh;
+
+    private void startAutoRefresh() {
+        if (autoRefresh != null) return;
+        autoRefresh = new javafx.animation.Timeline(new javafx.animation.KeyFrame(
+                javafx.util.Duration.seconds(30),
+                e -> List.copyOf(pingActions).forEach(Runnable::run)));
+        autoRefresh.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        autoRefresh.play();
+        sceneProperty().addListener((o, was, is) -> { if (is == null) autoRefresh.stop(); });
+    }
+
     private void rebuild() {
         list.getChildren().clear();
+        pingActions.clear();
+        startAutoRefresh();
         List<ServerFavorite> favs = ctx.config.serverFavorites;
         if (favs.isEmpty()) {
             Label l1 = new Label("No servers yet");
@@ -143,14 +162,35 @@ public final class ServersPanel extends BorderPane {
         row.getStyleClass().add("instance-card");
         row.setPadding(new Insets(14, 18, 14, 18));
 
-        pingAsync(fav, dot, motd, players, ping);
+        // One re-runnable status check for this row (guarded against overlapping runs),
+        // registered for the Refresh button + the 30-second auto-refresh.
+        java.util.concurrent.atomic.AtomicBoolean busy = new java.util.concurrent.atomic.AtomicBoolean();
+        Runnable check = () -> {
+            if (busy.getAndSet(true)) return;
+            pingAsync(fav, dot, motd, players, ping, () -> busy.set(false));
+        };
+        pingActions.add(check);
+        check.run();
         return row;
     }
 
-    private void pingAsync(ServerFavorite fav, Circle dot, Label motd, Label players, Label ping) {
+    private void pingAsync(ServerFavorite fav, Circle dot, Label motd, Label players, Label ping,
+                           Runnable onDone) {
+        // Pulse the dot while the check runs, so "loading" is clearly visible.
+        dot.setFill(Color.web("#6E6486"));
+        javafx.animation.FadeTransition pulse =
+                new javafx.animation.FadeTransition(javafx.util.Duration.millis(550), dot);
+        pulse.setFromValue(1.0);
+        pulse.setToValue(0.3);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        pulse.play();
+
         new Thread(() -> {
             ServerPinger.Status s = ServerPinger.ping(fav.address);
             Platform.runLater(() -> {
+                pulse.stop();
+                dot.setOpacity(1);
                 if (s.online()) {
                     dot.setFill(Color.web("#4ADE80"));
                     motd.setText(s.motd().isBlank() ? "Online" : s.motd());
@@ -158,10 +198,11 @@ public final class ServersPanel extends BorderPane {
                     ping.setText(s.latencyMs() + " ms" + (s.version().isBlank() ? "" : "  ·  " + s.version()));
                 } else {
                     dot.setFill(Color.web("#F87171"));
-                    motd.setText("Offline / unreachable");
+                    motd.setText("Offline / unreachable  ·  rechecking automatically");
                     players.setText("—");
                     ping.setText("");
                 }
+                onDone.run();
             });
         }, "luminamc-ping").start();
     }
