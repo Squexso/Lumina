@@ -130,7 +130,7 @@ public final class ServersPanel extends BorderPane {
                 .forEach(f -> list.getChildren().add(row(f)));
     }
 
-    private HBox row(ServerFavorite fav) {
+    private VBox row(ServerFavorite fav) {
         // Status dot: gray while pinging → green/red.
         Circle dot = new Circle(5, Color.web("#6E6486"));
 
@@ -151,16 +151,31 @@ public final class ServersPanel extends BorderPane {
 
         Button join = new Button("▶  JOIN");
         join.getStyleClass().add("play-button");
-        join.setOnAction(e -> join(fav, join));
 
         Button menu = new Button("⋮");
         menu.getStyleClass().add("card-icon-btn");
         menu.setOnAction(e -> rowMenu(menu, fav));
 
-        HBox row = new HBox(14, dot, titles, FxUi.hgrow(), stats, join, menu);
-        row.setAlignment(Pos.CENTER_LEFT);
+        HBox top = new HBox(14, dot, titles, FxUi.hgrow(), stats, join, menu);
+        top.setAlignment(Pos.CENTER_LEFT);
+
+        // Launch feedback lives IN the row: a progress bar + plain-text phase, shown
+        // while joining, so you always see what's happening and that it can take a bit.
+        ProgressBar launchBar = new ProgressBar(0);
+        launchBar.getStyleClass().add("global-progress");
+        launchBar.setPrefWidth(170);
+        Label launchPhase = FxUi.muted("");
+        launchPhase.setStyle("-fx-text-fill: #C4B5FD; -fx-font-size: 12px;");
+        HBox launchRow = new HBox(12, launchBar, launchPhase);
+        launchRow.setAlignment(Pos.CENTER_LEFT);
+        launchRow.setVisible(false);
+        launchRow.setManaged(false);
+
+        VBox row = new VBox(10, top, launchRow);
         row.getStyleClass().add("instance-card");
         row.setPadding(new Insets(14, 18, 14, 18));
+
+        join.setOnAction(e -> join(fav, join, launchRow, launchBar, launchPhase));
 
         // One re-runnable status check for this row (guarded against overlapping runs),
         // registered for the Refresh button + the 30-second auto-refresh.
@@ -234,7 +249,7 @@ public final class ServersPanel extends BorderPane {
 
     // ── join ─────────────────────────────────────────────────────────────
 
-    private void join(ServerFavorite fav, Button join) {
+    private void join(ServerFavorite fav, Button join, HBox launchRow, ProgressBar bar, Label phase) {
         Instance inst = resolveInstance(fav);
         if (inst == null) {
             LuminaDialog.error(win(), "No instance",
@@ -245,25 +260,39 @@ public final class ServersPanel extends BorderPane {
         ctx.config.save();
 
         join.setDisable(true);
-        join.setText("LAUNCHING…");
+        join.setText("STARTING…");
+        launchRow.setVisible(true);
+        launchRow.setManaged(true);
+        bar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+        phase.setText("Starting " + inst.name + " — the first launch can take a minute…");
         progressLabel.setText("Joining " + fav.address + " with " + inst.name + "…");
         progress.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
 
+        Runnable hideLaunch = () -> { launchRow.setVisible(false); launchRow.setManaged(false); };
+
         new LaunchService(ctx).launchAsync(inst, fav.address, new LaunchService.Callbacks() {
-            @Override public void phase(String text) { progressLabel.setText(text); }
+            @Override public void phase(String text) {
+                phase.setText(text);
+                progressLabel.setText(text);
+            }
             @Override public void progress(double f, String detail) {
+                bar.setProgress(f < 0 ? ProgressBar.INDETERMINATE_PROGRESS : f);
+                phase.setText(detail);
                 progress.setProgress(f < 0 ? ProgressBar.INDETERMINATE_PROGRESS : f);
                 progressLabel.setText(detail);
             }
             @Override public void log(String line) { }
             @Override public void started(Process p) {
                 join.setText("IN GAME");
+                bar.setProgress(1);
+                phase.setText("Minecraft is running — connecting you to " + fav.address + "…");
                 progressLabel.setText("Connected to " + fav.address);
                 progress.setProgress(1);
             }
             @Override public void finished(CrashReporter.Report report) {
                 join.setDisable(false);
                 join.setText("▶  JOIN");
+                hideLaunch.run();
                 progress.setProgress(0);
                 progressLabel.setText(report.crashed()
                         ? inst.name + " crashed (exit " + report.exitCode() + ")" : "Session ended");
@@ -271,6 +300,7 @@ public final class ServersPanel extends BorderPane {
             @Override public void failed(Throwable error) {
                 join.setDisable(false);
                 join.setText("▶  JOIN");
+                hideLaunch.run();
                 progress.setProgress(0);
                 progressLabel.setText("Launch failed");
                 String msg = error.getMessage() != null ? error.getMessage() : error.toString();
