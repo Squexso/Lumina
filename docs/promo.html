@@ -126,12 +126,6 @@
       </section>
       <!-- 5 -->
       <section class="scene" data-i="4">
-        <div class="ico">🎯</div>
-        <div class="big">Built-in <span class="grad">HUD client</span></div>
-        <div class="sub">FPS, coords, keystrokes &amp; more — open it in-game with Right-Shift.</div>
-      </section>
-      <!-- 6 -->
-      <section class="scene" data-i="5">
         <div class="logo" style="font-size:46px">LUMINA</div>
         <div class="free">Free · Windows</div>
         <div class="cta-btn">⬇ Download now</div>
@@ -143,7 +137,7 @@
     </div>
     <div class="dots">
       <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
     </div>
     <div class="hint">record this card · 1080×1920</div>
   </div>
@@ -185,8 +179,8 @@
 
   // ── scene timeline (~30s loop) ──
   const scenes=[...document.querySelectorAll('.scene')], dots=[...document.querySelectorAll('.dot')];
-  const SCHED=[ [0,5000],[5000,10500],[10500,15000],[15000,20000],[20000,25000],[25000,30000] ];
-  const LOOP=30000;
+  const SCHED=[ [0,5000],[5000,10500],[10500,15500],[15500,20500],[20500,26000] ];
+  const LOOP=26000;
   function tick(){
     const now = performance.now() % LOOP;
     let cur=0; for(let i=0;i<SCHED.length;i++){ if(now>=SCHED[i][0] && now<SCHED[i][1]){ cur=i; break; } }
