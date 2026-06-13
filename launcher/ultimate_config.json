@@ -1,0 +1,176 @@
+{
+  "admin_role_id": 1515364306710036520,
+  "mod_role_id": 1515364308400214076,
+  "vip_role_id": 1515364312535797820,
+  "member_role_id": 1515364321100566570,
+  "bot_role_id": 1515364310266679527,
+  "level5_role_id": 1515364317967679779,
+  "level10_role_id": 1515364316134637568,
+  "level25_role_id": 1515364313907593419,
+  "veteran_role_id": 1515364319699800064,
+  "mod_logs_channel_id": 1515364410741493831,
+  "announcements_channel_id": 1515364338741936320,
+  "status_channel_id": 1515364347235405894,
+  "welcome_channel_id": 1515173175602974780,
+  "leaderboard_channel_id": 1515364387995521248,
+  "stats_channel_id": 1515364390398984243,
+  "leveling_channel_id": 1515364385256767529,
+  "vip_codes_channel_id": 1515173233635364944,
+  "tickets_channel_id": 1515364380668334231,
+  "share_codes_channel_id": 1515173202081353728,
+  "open_tickets": {
+    "1515101273370787910": {
+      "creator": 1053405449946398811,
+      "created_at": "2026-06-12T23:11:32.989455",
+      "title": "Support Request"
+    },
+    "1515157404684128378": {
+      "creator": 1053405449946398811,
+      "created_at": "2026-06-13T02:54:35.682324",
+      "title": "pimmel"
+    },
+    "1515165624312266892": {
+      "creator": 1053405449946398811,
+      "created_at": "2026-06-13T03:27:15.375068",
+      "title": "Support Request"
+    },
+    "1515167392617992304": {
+      "creator": 1053405449946398811,
+      "created_at": "2026-06-13T03:34:17.092597",
+      "title": "Support Request"
+    },
+    "1515173500393099396": {
+      "creator": 1053405449946398811,
+      "created_at": "2026-06-13T03:58:33.235821",
+      "title": "test"
+    }
+  },
+  "warnings": {
+    "662247507992117268": [
+      {
+        "reason": "test",
+        "warned_by": 1053405449946398811,
+        "warned_at": "2026-06-13T02:56:26.193696"
+      }
+    ],
+    "1051141093061820416": [],
+    "1053405449946398811": []
+  },
+  "leveling": {
+    "1053405449946398811": {
+      "xp": 60,
+      "level": 3,
+      "messages": 60
+    },
+    "662247507992117268": {
+      "xp": 35,
+      "level": 1,
+      "messages": 6
+    },
+    "1051141093061820416": {
+      "level": 4,
+      "xp": 230,
+      "messages": 83
+    }
+  },
+  "server_stats": {
+    "total_warnings": 1,
+    "total_mutes": 0
+  },
+  "launcher_version": "0.1.4",
+  "launcher_status": "online",
+  "temp_vc_category_id": 1515364440193765466,
+  "guides_channel_id": 1515173207504584724,
+  "mod_guide_channel_id": 1515173246054694963,
+  "ping_updates_role_id": 1515364322845655125,
+  "ping_events_role_id": 1515364325345333375,
+  "ping_roles_channel_id": 1515173290573037608,
+  "share_channels": {
+    "1053405449946398811": {
+      "type": "share",
+      "created_at": 1781314326.7856896
+    }
+  },
+  "suggestions_channel_id": 1515364371998703708,
+  "vip_channel_id": 1515364402680041664,
+  "giveaways_channel_id": 1515364395679486054,
+  "last_github_release": "v0.0.0",
+  "last_bot_start": "2026-06-13T16:36:17.525457",
+  "vip_codes": {
+    "1515337229352964251": {
+      "code": "pimmel",
+      "expires": "2026-06-13T14:49:29.552298"
+    }
+  },
+  "giveaways": {
+    "gw1_1515189660396032172": {
+      "title": "test",
+      "prize": "test",
+      "ends_at": "2026-06-13T06:02:45.958512",
+      "message_id": 1515189662862540801,
+      "channel_id": 1515189253737287913,
+      "participants": [],
+      "ended": false
+    },
+    "gw2_1515196173940690954": {
+      "title": "test",
+      "prize": "1pimmel im ass",
+      "ends_at": "2026-06-13T06:28:38.920956",
+      "message_id": 1515196176587165757,
+      "channel_id": 1515195786416357531,
+      "participants": [
+        1053405449946398811
+      ],
+      "ended": false
+    },
+    "gw3_1515198066410655864": {
+      "title": "test",
+      "prize": "test",
+      "ends_at": "2026-06-13T06:36:10.104306",
+      "message_id": 1515198068507541505,
+      "channel_id": 1515197626369183775,
+      "participants": [],
+      "ended": false
+    },
+    "gw4_1515336846349963486": {
+      "title": "test",
+      "prize": "pimmel",
+      "ends_at": "2026-06-13T15:47:38.172201",
+      "message_id": 1515336849306943488,
+      "channel_id": 1515200689280909392,
+      "participants": [
+        1051141093061820416,
+        1053405449946398811
+      ],
+      "ended": false
+    },
+    "gw5_1515361040165109770": {
+      "title": "test",
+      "prize": "einfachkater zeigt pimmel",
+      "ends_at": "2026-06-14T16:23:46.395709",
+      "message_id": 1515361042702794762,
+      "channel_id": 1515360515256352930,
+      "participants": [
+        1053405449946398811,
+        1051141093061820416
+      ],
+      "ended": false
+    },
+    "gw6_1515362102230122587": {
+      "title": "test",
+      "prize": "tests ig",
+      "ends_at": "2026-06-14T16:27:59.732641",
+      "message_id": 1515362104830464072,
+      "channel_id": 1515361782292807810,
+      "participants": [
+        1053405449946398811,
+        1051141093061820416
+      ],
+      "ended": false
+    }
+  },
+  "getroles_channel_id": 1515364359164133568,
+  "botcmds_channel_id": 1515364374234136709,
+  "warnings_channel_id": 1515364412746367139,
+  "temp_vcs": {}
+}
