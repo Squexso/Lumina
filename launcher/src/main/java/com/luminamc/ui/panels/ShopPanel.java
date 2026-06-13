@@ -416,6 +416,17 @@ public final class ShopPanel extends BorderPane {
         Node action;
         if (owned) {
             String code = ctx.config.vipRedeemCode != null ? ctx.config.vipRedeemCode : "";
+
+            // Step-by-step instructions
+            Label stepsTitle = new Label("How to activate your VIP role:");
+            stepsTitle.setStyle("-fx-text-fill: #E5E1F0; -fx-font-weight: bold; -fx-font-size: 12px;");
+            Label step1 = FxUi.muted("1.  Copy your code below");
+            Label step2 = FxUi.muted("2.  Join the LuminaMC Discord (link in Settings)");
+            Label step3 = FxUi.muted("3.  Type  /redeem-vip  in any channel and paste the code");
+            Label step4 = FxUi.muted("4.  Done — the 👑 Supernova role is instantly yours!");
+            VBox steps = new VBox(3, stepsTitle, step1, step2, step3, step4);
+
+            // Code field + copy button
             TextField tf = new TextField(code);
             tf.setEditable(false);
             tf.setPrefWidth(260);
@@ -434,9 +445,17 @@ public final class ShopPanel extends BorderPane {
                 pt.setOnFinished(ev -> copy.setText("Copy code"));
                 pt.play();
             });
-            Label codeHint = FxUi.muted("Paste this in Discord with /redeem-vip to receive the 👑 Supernova role.");
-            codeHint.setWrapText(true);
-            action = new VBox(8, new HBox(8, tf, copy), codeHint);
+
+            // Warning — prominent red banner
+            Label warn = new Label(
+                    "⚠  Never share this code! It works only once — if someone else redeems it first, "
+                    + "the VIP role goes to them, not you.");
+            warn.setWrapText(true);
+            warn.setStyle("-fx-text-fill: #FCA5A5; -fx-font-size: 11px; -fx-font-weight: bold;"
+                    + " -fx-background-color: #450a0a; -fx-background-radius: 8;"
+                    + " -fx-padding: 8 12 8 12;");
+
+            action = new VBox(10, steps, new HBox(8, tf, copy), warn);
         } else {
             long balance = wallet.balance();
             boolean canAfford = balance >= com.luminamc.shop.VipManager.PRICE;
@@ -446,6 +465,8 @@ public final class ShopPanel extends BorderPane {
             buy.getStyleClass().add("accent-button");
             buy.setMaxWidth(Double.MAX_VALUE);
             buy.setDisable(!canAfford);
+            Label onceNote = FxUi.muted("Your code is generated once and works once — keep it private.");
+            onceNote.setWrapText(true);
             if (canAfford) {
                 FxUi.hoverPop(buy);
                 buy.setOnAction(e -> {
@@ -453,7 +474,7 @@ public final class ShopPanel extends BorderPane {
                     if (newCode != null) rebuild();
                 });
             }
-            action = buy;
+            action = new VBox(8, buy, onceNote);
         }
 
         VBox card = new VBox(10, head, desc, perks, priceLabel, action);
