@@ -1,6 +1,8 @@
 package com.luminamc.ui.panels;
 
+import com.luminamc.crash.CrashAnalyzer;
 import com.luminamc.crash.CrashReporter;
+import com.luminamc.game.InstanceImporter;
 import com.luminamc.instance.Instance;
 import com.luminamc.ui.AppContext;
 import com.luminamc.ui.FxUi;
@@ -15,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.stage.DirectoryChooser;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -49,7 +52,7 @@ public final class OverviewPanel extends VBox {
         setSpacing(18);
         setPadding(new Insets(24));
 
-        getChildren().addAll(header(), newsCard(), launchArea(), crashCard, screenshots());
+        getChildren().addAll(header(), importArea(), newsCard(), launchArea(), crashCard, screenshots());
         crashCard.setVisible(false);
         crashCard.setManaged(false);
     }
@@ -219,14 +222,108 @@ public final class OverviewPanel extends VBox {
         });
     }
 
+    /** Import-from-client area shown above the news card. */
+    private VBox importArea() {
+        Label desc = FxUi.muted(
+                "Moving files from another client (Luna Client, OptiFine, etc.)? " +
+                "Use the import tool — it filters incompatible mods automatically.");
+        Button btn = new Button("📂  Import from another client…");
+        btn.getStyleClass().add("ghost-button");
+        btn.setOnAction(e -> runImport());
+        HBox row = new HBox(10, btn);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return FxUi.card(FxUi.sectionTitle("Import"), desc, row);
+    }
+
+    private void runImport() {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle("Select the other client's folder (.minecraft or similar)");
+        File picked = chooser.showDialog(getScene() != null ? getScene().getWindow() : null);
+        if (picked == null) return;
+
+        Path src = picked.toPath();
+        new Thread(() -> {
+            try {
+                InstanceImporter importer = new InstanceImporter();
+                InstanceImporter.ImportAnalysis analysis = importer.analyze(src, inst);
+
+                // Build summary for the confirmation dialog.
+                StringBuilder sb = new StringBuilder();
+                sb.append("Found the following folders:\n\n");
+                for (InstanceImporter.FolderRule rule : analysis.folderRules()) {
+                    String icon = switch (rule.decision()) {
+                        case COPY        -> "✓";
+                        case WARN        -> "⚠";
+                        case FILTER_MODS -> "🔎";
+                        case SKIP        -> "✗";
+                    };
+                    sb.append(icon).append("  ").append(rule.folderName())
+                      .append(" — ").append(rule.reason()).append('\n');
+                }
+                if (!analysis.modResults().isEmpty()) {
+                    long kept    = analysis.modResults().stream().filter(InstanceImporter.ModAnalysis::keep).count();
+                    long dropped = analysis.modResults().size() - kept;
+                    sb.append("\nMods: ").append(kept).append(" compatible, ")
+                      .append(dropped).append(" incompatible (will be removed).");
+                }
+                sb.append("\n\nProceed with the import?");
+
+                Platform.runLater(() -> {
+                    int choice = com.luminamc.ui.LuminaDialog.choose(
+                            getScene() != null ? getScene().getWindow() : null,
+                            "📂", "Import — " + picked.getName(),
+                            sb.toString(),
+                            "Import", "Cancel");
+                    if (choice != 0) return;
+
+                    logCard.setVisible(true); logCard.setManaged(true);
+                    log.clear();
+                    log.append("[Import] Starting import from " + src + "…");
+
+                    new Thread(() -> {
+                        try {
+                            importer.execute(analysis, inst, line -> Platform.runLater(() -> log.append(line)));
+                        } catch (Exception ex) {
+                            Platform.runLater(() -> log.append("[Import] ERROR: " + ex.getMessage()));
+                        }
+                    }, "luminamc-import").start();
+                });
+            } catch (Exception ex) {
+                Platform.runLater(() -> com.luminamc.ui.LuminaDialog.error(
+                        getScene() != null ? getScene().getWindow() : null,
+                        "Import failed", ex.getMessage()));
+            }
+        }, "luminamc-import-analyze").start();
+    }
+
     private void showCrash(CrashReporter.Report report) {
         crashCard.getChildren().clear();
-        Label t = FxUi.sectionTitle("Game crashed (exit " + report.exitCode() + ")");
-        Label summary = FxUi.muted(CrashReporter.summarize(java.util.List.of(report.log().split("\n"))));
-        Button open = new Button("Open crash report");
-        open.getStyleClass().add("ghost-button");
-        if (report.file() != null) open.setOnAction(e -> openFile(report.file()));
-        crashCard.getChildren().addAll(t, summary, open);
+
+        // Run the smart analyzer to get a human-readable diagnosis.
+        List<String> logLines = java.util.Arrays.asList(report.log().split("\n"));
+        CrashAnalyzer.Diagnosis diag = CrashAnalyzer.analyze(logLines);
+
+        Label title = FxUi.sectionTitle("💥  " + diag.title());
+        title.setStyle("-fx-text-fill: #F87171;");
+
+        Label cause = new Label(diag.cause());
+        cause.getStyleClass().add("muted");
+        cause.setWrapText(true);
+
+        Label fixLabel = new Label("Fix: " + diag.fix());
+        fixLabel.setStyle("-fx-text-fill: #86EFAC; -fx-font-size: 13px;");
+        fixLabel.setWrapText(true);
+
+        Button openLog = new Button("Open full crash report");
+        openLog.getStyleClass().add("ghost-button");
+        if (report.file() != null) openLog.setOnAction(e -> openFile(report.file()));
+
+        Button importBtn = new Button("📂  Import clean files…");
+        importBtn.getStyleClass().add("ghost-button");
+        importBtn.setOnAction(e -> runImport());
+
+        HBox buttons = new HBox(10, openLog, importBtn);
+        crashCard.getChildren().addAll(title, cause, fixLabel, buttons);
         crashCard.getStyleClass().setAll("card", "crash-card");
         crashCard.setVisible(true);
         crashCard.setManaged(true);
