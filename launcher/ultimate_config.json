@@ -1,22 +1,22 @@
 {
-  "admin_role_id": 1515364306710036520,
-  "mod_role_id": 1515364308400214076,
-  "vip_role_id": 1515364312535797820,
-  "member_role_id": 1515364321100566570,
-  "bot_role_id": 1515364310266679527,
-  "level5_role_id": 1515364317967679779,
-  "level10_role_id": 1515364316134637568,
-  "level25_role_id": 1515364313907593419,
-  "veteran_role_id": 1515364319699800064,
-  "mod_logs_channel_id": 1515364410741493831,
-  "announcements_channel_id": 1515364338741936320,
-  "status_channel_id": 1515364347235405894,
+  "admin_role_id": 1515495436943757494,
+  "mod_role_id": 1515495439799947467,
+  "vip_role_id": 1515495443981930638,
+  "member_role_id": 1515495453242818732,
+  "bot_role_id": 1515495441880318125,
+  "level5_role_id": 1515495449455497238,
+  "level10_role_id": 1515495447538434121,
+  "level25_role_id": 1515495445370241173,
+  "veteran_role_id": 1515495451535736974,
+  "mod_logs_channel_id": 1515495539917983911,
+  "announcements_channel_id": 1515495470217298122,
+  "status_channel_id": 1515495477125316708,
   "welcome_channel_id": 1515173175602974780,
-  "leaderboard_channel_id": 1515364387995521248,
-  "stats_channel_id": 1515364390398984243,
-  "leveling_channel_id": 1515364385256767529,
+  "leaderboard_channel_id": 1515495517461807196,
+  "stats_channel_id": 1515495519697375482,
+  "leveling_channel_id": 1515495515226378332,
   "vip_codes_channel_id": 1515173233635364944,
-  "tickets_channel_id": 1515364380668334231,
+  "tickets_channel_id": 1515495510880813076,
   "share_codes_channel_id": 1515173202081353728,
   "open_tickets": {
     "1515101273370787910": {
@@ -79,11 +79,11 @@
   },
   "launcher_version": "0.1.4",
   "launcher_status": "online",
-  "temp_vc_category_id": 1515364440193765466,
+  "temp_vc_category_id": 1515495567449526282,
   "guides_channel_id": 1515173207504584724,
   "mod_guide_channel_id": 1515173246054694963,
-  "ping_updates_role_id": 1515364322845655125,
-  "ping_events_role_id": 1515364325345333375,
+  "ping_updates_role_id": 1515495455419797685,
+  "ping_events_role_id": 1515495457294389329,
   "ping_roles_channel_id": 1515173290573037608,
   "share_channels": {
     "1053405449946398811": {
@@ -91,11 +91,11 @@
       "created_at": 1781314326.7856896
     }
   },
-  "suggestions_channel_id": 1515364371998703708,
-  "vip_channel_id": 1515364402680041664,
-  "giveaways_channel_id": 1515364395679486054,
+  "suggestions_channel_id": 1515495500881727548,
+  "vip_channel_id": 1515495531936350413,
+  "giveaways_channel_id": 1515495524449386526,
   "last_github_release": "v0.0.0",
-  "last_bot_start": "2026-06-13T16:36:17.525457",
+  "last_bot_start": "2026-06-14T01:17:13.207753",
   "vip_codes": {
     "1515337229352964251": {
       "code": "pimmel",
@@ -169,8 +169,8 @@
       "ended": false
     }
   },
-  "getroles_channel_id": 1515364359164133568,
-  "botcmds_channel_id": 1515364374234136709,
-  "warnings_channel_id": 1515364412746367139,
+  "getroles_channel_id": 1515495488571445248,
+  "botcmds_channel_id": 1515495503146778766,
+  "warnings_channel_id": 1515495542581366955,
   "temp_vcs": {}
 }

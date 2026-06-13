@@ -117,6 +117,28 @@ async def log_action(guild, title, user=None, desc="", color=LUMINA_COLOR):
 
 GITHUB_REPO = "Squexso/Lumina"
 
+# Built-in changelogs for versions where the GitHub release body is sparse.
+# Keyed by exact tag string (e.g. "v0.1.4").
+RELEASE_CHANGELOGS = {
+    "v0.1.4": {
+        "new": [
+            "VIP Shop — buy the 👑 Supernova Discord role for 15,000 Lumina Tokens",
+            "Smart crash analyzer — shows what went wrong and exactly how to fix it",
+            "Client import tool — safely copy saves, mods, configs from any Minecraft client",
+            "Daily login streak + Creator Codes in the Shop",
+        ],
+        "fixed": [
+            "Performance mod installer now detects Lithium so it no longer double-installs",
+            "LambDynamicLights only installs when the performance-mod toggle is on",
+            "Discord bot was showing launcher version 1.3 instead of 0.1.4",
+        ],
+        "improved": [
+            "Crash reports now show a human-readable cause + fix suggestion instead of raw logs",
+            "Shop UI — VIP card with gold glow at the top of the Cosmetics tab",
+        ],
+    },
+}
+
 async def fetch_latest_release():
     """Return dict {tag, url, body} of the latest GitHub release, or None."""
     try:
@@ -178,26 +200,55 @@ def build_serverstats_embed(guild, cfg):
     return e
 
 def clean_notes(body):
-    """Strip links / 'Full Changelog' lines → leave only readable text."""
+    """Parse GitHub markdown release notes into clean Discord text (strips URLs/Full Changelog)."""
     lines = []
     for ln in (body or "").split("\n"):
         low = ln.lower()
         if "http://" in low or "https://" in low or "full changelog" in low or "www." in low:
             continue
+        # Convert ## headings to bold
+        stripped = ln.lstrip("#").strip()
+        if ln.startswith("#") and stripped:
+            ln = f"**{stripped}**"
+        # Convert markdown bullets to Discord bullets
+        elif ln.startswith(("- ", "* ")):
+            ln = "• " + ln[2:]
         lines.append(ln)
-    text = "\n".join(lines).strip()
-    return text or "✨ General improvements, fixes and polish."
+    return "\n".join(lines).strip() or None
 
 def build_update_embed(rel):
-    """launcher-updates → the LINK: version + download button."""
-    e = discord.Embed(title=f"🚀 {rel['name']}", description=f"A new launcher version is out! 🎉", color=LUMINA_COLOR, url=rel["url"])
-    e.add_field(name="📦 Version", value=rel["tag"], inline=True)
+    """launcher-updates → version + download + top highlights."""
+    e = discord.Embed(
+        title=f"🚀 {rel['name']}",
+        description="A new launcher version is available! Download it from GitHub.",
+        color=LUMINA_COLOR,
+        url=rel["url"]
+    )
+    e.add_field(name="📦 Version", value=f"`{rel['tag']}`", inline=True)
     e.add_field(name="🔗 Download", value=f"[GitHub Release]({rel['url']})", inline=True)
+    cl = RELEASE_CHANGELOGS.get(rel["tag"])
+    if cl and cl.get("new"):
+        preview = "\n".join(f"• {x}" for x in cl["new"][:3])
+        e.add_field(name="✨ Highlights", value=preview, inline=False)
+    e.set_footer(text=f"LuminaMC Launcher · {rel['tag']}")
     return e
 
 def build_changelog_embed(rel):
-    """changelog → pure TEXT: what's new, no links."""
-    e = discord.Embed(title=f"📋 {rel['tag']} — What's New", description=clean_notes(rel["body"]), color=LUMINA_COLOR, timestamp=datetime.datetime.now())
+    """changelog → rich sections: New / Fixed / Improved."""
+    tag = rel["tag"]
+    e = discord.Embed(title=f"📋 {tag} — What's New", color=LUMINA_COLOR, timestamp=datetime.datetime.now())
+    cl = RELEASE_CHANGELOGS.get(tag)
+    if cl:
+        if cl.get("new"):
+            e.add_field(name="✨ New", value="\n".join(f"• {x}" for x in cl["new"]), inline=False)
+        if cl.get("fixed"):
+            e.add_field(name="🐛 Fixed", value="\n".join(f"• {x}" for x in cl["fixed"]), inline=False)
+        if cl.get("improved"):
+            e.add_field(name="🔧 Improved", value="\n".join(f"• {x}" for x in cl["improved"]), inline=False)
+    else:
+        notes = clean_notes(rel["body"])
+        e.description = notes or "✨ General improvements, fixes and polish."
+    e.set_footer(text=f"LuminaMC Launcher · {tag}")
     return e
 
 async def edit_or_send(ch, embed):
