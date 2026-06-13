@@ -78,21 +78,24 @@ public final class AppContext {
     }
 
     /**
-     * Chooses the JDK to launch with, given the version's <em>actual</em> required
-     * major (from its JSON). Honors an explicit per-instance override; otherwise
-     * uses the global default if it's adequate, else the lowest adequate detected
-     * JDK. Returns null if nothing satisfies the requirement.
+     * Chooses the JDK to launch with for a version's {@link com.luminamc.javart.JavaTarget}.
+     * Honors an explicit per-instance override; otherwise uses the global default if the
+     * target accepts it, else the best detected JDK. For a capped target (legacy Minecraft,
+     * Java 8 only) a too-new global default is skipped and an exact match is required.
+     * Returns null if nothing satisfies the target.
      */
-    public JavaRuntime javaForLaunch(Instance inst, int requiredMajor) {
+    public JavaRuntime javaForLaunch(Instance inst, com.luminamc.javart.JavaTarget target) {
         if (inst != null && notBlank(inst.javaPathOverride)) {
             JavaRuntime r = javaDetector.probePath(inst.javaPathOverride);
             if (r != null) return r; // explicit choice is respected as-is
         }
         if (notBlank(config.defaultJavaPath)) {
             JavaRuntime r = javaDetector.probePath(config.defaultJavaPath);
-            if (r != null && r.major >= requiredMajor) return r;
+            if (r != null && target.accepts(r.major)) return r;
         }
-        return javaDetector.bestForMajor(runtimes, requiredMajor);
+        return target.exact
+                ? javaDetector.exactMajor(runtimes, target.major)
+                : javaDetector.bestForMajor(runtimes, target.major);
     }
 
     /** e.g. "21, 17" — installed Java majors, for error messages. */

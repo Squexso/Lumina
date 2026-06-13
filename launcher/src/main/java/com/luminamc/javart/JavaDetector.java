@@ -76,6 +76,15 @@ public final class JavaDetector {
                 .orElse(null);
     }
 
+    /** An installed runtime whose major is exactly {@code major}, or null — used for
+     *  legacy Minecraft (≤ 1.16) which only runs on Java 8, never a newer JDK. */
+    public JavaRuntime exactMajor(List<JavaRuntime> runtimes, int major) {
+        return runtimes.stream()
+                .filter(r -> r.major == major)
+                .findFirst()
+                .orElse(null);
+    }
+
     /** Heuristic minimum Java major for a Minecraft version. */
     public static int requiredMajor(String mcVersion) {
         if (mcVersion == null) return 21;

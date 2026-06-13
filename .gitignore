@@ -28,3 +28,13 @@ Thumbs.db
 *.log
 *.pfx
 cert.*
+.env
+**/.env
+
+# ── Discord bot: secrets, local state & Python artifacts ───────
+# The bot token lives in launcher/.env (never commit it). The db and config
+# files are local runtime state; __pycache__/*.pyc are build artifacts.
+*.db
+__pycache__/
+**/__pycache__/
+*.pyc

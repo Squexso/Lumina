@@ -123,27 +123,33 @@ public final class LaunchService {
             String initialJava = ctx.resolveJavaExe(inst);
             ResolvedVersion rv = installer.resolve(inst, entry, initialJava, listener);
 
-            com.luminamc.javart.JavaRuntime jr = ctx.javaForLaunch(inst, rv.javaMajor);
+            // Old Minecraft (≤ 1.16 / LegacyLauncher) runs ONLY on Java 8 — a newer JDK
+            // crashes in launchwrapper. The target captures that cap; modern versions just
+            // get a floor. Picking the right Java here is what prevents the 1.12.2
+            // "AppClassLoader cannot be cast to URLClassLoader" launch crash.
+            com.luminamc.javart.JavaTarget javaTarget =
+                    com.luminamc.javart.JavaTarget.forVersion(inst.mcVersion, rv.javaMajor, rv.mainClass);
+            com.luminamc.javart.JavaRuntime jr = ctx.javaForLaunch(inst, javaTarget);
             String javaExe;
-            if (jr != null && jr.major >= rv.javaMajor) {
+            if (jr != null && javaTarget.accepts(jr.major)) {
                 // A suitable local JDK/JRE is available.
                 javaExe = jr.executable.toString();
                 fx(cb, c -> c.log("Using Java " + jr.major + " at " + jr.executable));
             } else {
-                // No adequate local Java — download the right one automatically.
+                // No suitable local Java — download exactly the right major automatically.
                 fx(cb, c -> {
-                    c.phase("Preparing Java " + rv.javaMajor + "…");
-                    c.log("No local Java " + rv.javaMajor + " found (have: " + ctx.installedMajors()
+                    c.phase("Preparing Java " + javaTarget.major + "…");
+                    c.log("No usable local Java " + javaTarget.major + " found (have: " + ctx.installedMajors()
                             + "). Downloading it automatically — this happens only once.");
                 });
                 try {
                     java.nio.file.Path autoJava = new com.luminamc.javart.JreProvisioner()
-                            .ensureJava(rv.javaMajor, msg -> fx(cb, c -> c.phase(msg)));
+                            .ensureJava(javaTarget.major, msg -> fx(cb, c -> c.phase(msg)));
                     javaExe = autoJava.toString();
-                    fx(cb, c -> c.log("Using auto-downloaded Java " + rv.javaMajor + " at " + autoJava));
+                    fx(cb, c -> c.log("Using auto-downloaded Java " + javaTarget.major + " at " + autoJava));
                 } catch (Exception dlErr) {
                     throw new IllegalStateException("Minecraft " + inst.mcVersion + " needs Java "
-                            + rv.javaMajor + ", which isn't installed, and the automatic download failed:\n"
+                            + javaTarget.major + ", which isn't installed, and the automatic download failed:\n"
                             + dlErr.getMessage(), dlErr);
                 }
             }
