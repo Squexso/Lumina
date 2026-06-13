@@ -137,6 +137,24 @@ RELEASE_CHANGELOGS = {
             "Shop UI — VIP card with gold glow at the top of the Cosmetics tab",
         ],
     },
+    "v0.1.5": {
+        "new": [
+            "VIP Shop — buy the 👑 Supernova Discord role for 15,000 Lumina Tokens",
+            "/redeem-vip Discord command — paste your code to instantly get the Supernova role",
+            "Smart crash analyzer — plain-language cause + fix for every crash type",
+            "Client import tool — safely copy saves, mods and configs from any other client",
+        ],
+        "fixed": [
+            "Performance mod installer no longer double-installs when Lithium is already present",
+            "LambDynamicLights now only installs when the performance-mod feature is enabled",
+            "Discord bot was displaying launcher version as 1.3 — corrected to 0.1.4/0.1.5",
+        ],
+        "improved": [
+            "Crash reports show a human-readable diagnosis instead of raw log lines",
+            "VIP card shows step-by-step instructions and a warning not to share the code",
+            "Discord changelog now shows real New / Fixed / Improved sections per version",
+        ],
+    },
 }
 
 async def fetch_latest_release():
