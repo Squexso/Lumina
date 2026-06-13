@@ -20,7 +20,9 @@ import java.util.stream.Stream;
  * version-aware and uses Modrinth:
  *
  * <ul>
- *   <li><b>Fabric</b> → Sodium, else Lithium</li>
+ *   <li><b>Fabric</b> → VulkanMod (Vulkan renderer), else Lithium for versions it
+ *       doesn't support. VulkanMod replaces the whole renderer, so it is used
+ *       <em>instead of</em> Sodium (the two are mutually exclusive).</li>
  *   <li><b>NeoForge</b> → Sodium (NeoForge build), else Embeddium</li>
  *   <li><b>Forge</b> → Embeddium, else Rubidium, else (old versions like 1.12.2)
  *       FoamFix, else VanillaFix</li>
@@ -38,7 +40,7 @@ public final class PerformanceModInstaller {
 
     /** Known performance-mod jar name fragments — to detect an existing install. */
     private static final String[] KNOWN =
-            {"sodium", "embeddium", "rubidium", "foamfix", "vanillafix", "optifine"};
+            {"vulkanmod", "sodium", "embeddium", "rubidium", "foamfix", "vanillafix", "optifine"};
 
     public void ensure(Instance inst, Consumer<String> log) {
         if (inst.loader == ModLoader.VANILLA) {
@@ -62,7 +64,9 @@ public final class PerformanceModInstaller {
             if (loaderName == null) return;
 
             List<String> candidates = switch (inst.loader) {
-                case FABRIC   -> List.of("sodium", "lithium");
+                // VulkanMod (Vulkan renderer) instead of Sodium; Lithium is a logic-only,
+                // VulkanMod-compatible fallback for MC versions VulkanMod doesn't cover.
+                case FABRIC   -> List.of("vulkanmod", "lithium");
                 case NEOFORGE -> List.of("sodium", "embeddium");
                 // Modern Forge → Embeddium/Rubidium; very old Forge (1.12.2 etc.)
                 // has no Sodium-family mod, so fall back to the best maintained

@@ -232,7 +232,7 @@ public final class MainWindow {
 
     /**
      * Pre-optimizes a freshly created non-vanilla instance in the background: drops
-     * in the loader-correct performance mod (Fabric → Sodium, Forge → Embeddium,
+     * in the loader-correct performance mod (Fabric → VulkanMod, Forge → Embeddium,
      * NeoForge → Sodium/Embeddium) plus, on Fabric, the Fabric API — so the instance
      * is ready-optimized from the very first launch. Silent and best-effort.
      */
