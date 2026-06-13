@@ -73,7 +73,10 @@ public final class LauncherConfig {
     /** Second line of the Discord status. */
     public String discordState = "LuminaMC Launcher";
     /** Invite shown as a Rich-Presence button (visible to others). Empty = no button. */
-    public String discordInviteUrl = "https://discord.gg/hZurxFCgJt";
+    public String discordInviteUrl = "https://discord.gg/E7qYYCJwSh";
+
+    /** Previous invite codes that should auto-migrate to the current {@link #discordInviteUrl}. */
+    private static final String[] OLD_DISCORD_INVITES = { "hZurxFCgJt" };
 
     // ── Lumina Tokens economy ──────────────────────────────────────────────
     /** Spendable Lumina Token balance. Earned by playtime; topped up later via PayPal. */
@@ -116,6 +119,15 @@ public final class LauncherConfig {
         // Fresh install: size the default max heap to this machine (≈ half its RAM).
         if (!c.setupComplete && c.defaultRamMaxMb == 4096) {
             c.defaultRamMaxMb = com.luminamc.javart.SystemSpecs.recommendedMaxRamMb();
+        }
+        // Migrate a saved old Discord invite to the current one.
+        if (c.discordInviteUrl != null) {
+            for (String old : OLD_DISCORD_INVITES) {
+                if (c.discordInviteUrl.contains(old)) {
+                    c.discordInviteUrl = "https://discord.gg/E7qYYCJwSh";
+                    break;
+                }
+            }
         }
         return c;
     }
