@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 import json, os, datetime, sqlite3, string, random, logging, asyncio
+import hmac as hmac_lib, hashlib
 import aiohttp
 from pathlib import Path
 
@@ -1156,6 +1157,66 @@ async def remove_vip(interaction: discord.Interaction, user: discord.User):
                 return
 
     await interaction.response.send_message("❌ VIP role not found!", ephemeral=True)
+
+def validate_vip_code(code: str, secret: str) -> bool:
+    parts = code.strip().upper().split("-")
+    if len(parts) != 3 or parts[0] != "VIP": return False
+    if len(parts[1]) != 8 or len(parts[2]) != 6: return False
+    expected = hmac_lib.new(secret.encode(), parts[1].encode(), hashlib.sha256).hexdigest()[:6].upper()
+    return parts[2] == expected
+
+@bot.tree.command(name="redeem-vip", description="Redeem a VIP code from the LuminaMC launcher shop")
+async def redeem_vip(interaction: discord.Interaction, code: str):
+    await interaction.response.defer(ephemeral=True)
+
+    secret = os.getenv("VIP_CODE_SECRET", "lumina-vip-2026-squexso")
+    code_upper = code.strip().upper()
+
+    if not validate_vip_code(code_upper, secret):
+        await interaction.followup.send("❌ Invalid VIP code! Buy one in the LuminaMC launcher shop for 15,000 tokens.", ephemeral=True)
+        return
+
+    cfg = load_config()
+    used = cfg.get("used_vip_codes", [])
+    if code_upper in used:
+        await interaction.followup.send("❌ This code has already been redeemed!", ephemeral=True)
+        return
+
+    member = interaction.guild.get_member(interaction.user.id)
+    if not member:
+        await interaction.followup.send("❌ You must be a member of this server!", ephemeral=True)
+        return
+
+    vip_role_id = cfg.get("vip_role_id")
+    role = interaction.guild.get_role(vip_role_id) if vip_role_id else None
+    if not role:
+        await interaction.followup.send("❌ VIP role not configured — contact an admin.", ephemeral=True)
+        return
+
+    try:
+        await member.add_roles(role)
+        used.append(code_upper)
+        cfg["used_vip_codes"] = used
+        save_config(cfg)
+
+        e = discord.Embed(
+            title="👑 New Supernova VIP!",
+            description=f"{interaction.user.mention} just unlocked VIP! 🎉",
+            color=discord.Color.gold()
+        )
+        e.add_field(name="✅ Role Granted", value=role.mention, inline=False)
+        e.set_footer(text="LuminaMC VIP — thank you for your support!")
+
+        vip_ch = None
+        if cfg.get("vip_channel_id"):
+            vip_ch = interaction.guild.get_channel(cfg["vip_channel_id"])
+        if vip_ch:
+            try: await vip_ch.send(embed=e)
+            except: pass
+
+        await interaction.followup.send(f"🎉 VIP activated! You've been given the {role.mention} role. Welcome to Supernova!", ephemeral=True)
+    except Exception as ex:
+        await interaction.followup.send(f"❌ Error granting VIP role: {ex}", ephemeral=True)
 
 @bot.tree.command(name="vip-code", description="[ADMIN] Post VIP code")
 async def vip_code(interaction: discord.Interaction, code: str, duration: str):

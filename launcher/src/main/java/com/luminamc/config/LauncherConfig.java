@@ -96,6 +96,17 @@ public final class LauncherConfig {
     /** History of every code redemption (newest appended last), for the shop log. */
     public java.util.List<com.luminamc.shop.RedemptionEntry> redemptionLog = new java.util.ArrayList<>();
 
+    // ── VIP membership ─────────────────────────────────────────────────────
+    /** True once the user has purchased VIP through the shop. */
+    public boolean vipOwned = false;
+    /** The signed redemption code generated at purchase time (shown so user can copy it again). */
+    public String vipRedeemCode = null;
+    /**
+     * Shared secret between the launcher and the Discord bot for signing VIP codes.
+     * Must match {@code VIP_CODE_SECRET} in the bot's {@code .env} file.
+     */
+    public String vipCodeSecret = com.luminamc.shop.VipManager.DEFAULT_SECRET;
+
     // ── Server favorites (Quick-Connect) ───────────────────────────────────
     /** Saved servers for one-click join from the Servers panel. */
     public java.util.List<com.luminamc.servers.ServerFavorite> serverFavorites = new java.util.ArrayList<>();

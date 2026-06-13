@@ -137,7 +137,7 @@ public final class ShopPanel extends BorderPane {
         switch (activeTab) {
             case "Buy Tokens"  -> content.getChildren().setAll(tokenPacksSection());
             case "Free Tokens" -> content.getChildren().setAll(streakCard(), creatorCodeCard(), redeemLogCard(), howToEarnCard());
-            default            -> content.getChildren().setAll(cosmeticsSection());
+            default            -> content.getChildren().setAll(vipCard(), cosmeticsSection());
         }
         onWalletChanged.run();
     }
@@ -386,6 +386,85 @@ public final class ShopPanel extends BorderPane {
         if (s < 3600)  return (s / 60) + " min ago";
         if (s < 86400) return (s / 3600) + " h ago";
         return (s / 86400) + " d ago";
+    }
+
+    // ── VIP membership card ──────────────────────────────────────────────────
+
+    private VBox vipCard() {
+        boolean owned = ctx.config.vipOwned;
+
+        Label crown = new Label("👑");
+        crown.setStyle("-fx-font-size: 28px;");
+        Label heading = new Label("VIP — Supernova");
+        heading.setStyle("-fx-text-fill: #FACC15; -fx-font-weight: bold; -fx-font-size: 18px;");
+        HBox head = new HBox(10, crown, heading);
+        head.setAlignment(Pos.CENTER_LEFT);
+
+        Label desc = FxUi.muted("Unlock the exclusive 👑 Supernova role on the LuminaMC Discord — "
+                + "one-time purchase, yours forever. After buying, paste your code in Discord "
+                + "with /redeem-vip to activate the role.");
+        desc.setWrapText(true);
+
+        VBox perks = new VBox(4,
+                FxUi.muted("·  Exclusive Discord role: 👑 Supernova"),
+                FxUi.muted("·  Access to the VIP channel"),
+                FxUi.muted("·  Special colour in the member list"));
+
+        Label priceLabel = new Label("✦  " + fmt(com.luminamc.shop.VipManager.PRICE) + " Lumina Tokens");
+        priceLabel.setStyle("-fx-text-fill: #FACC15; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+        Node action;
+        if (owned) {
+            String code = ctx.config.vipRedeemCode != null ? ctx.config.vipRedeemCode : "";
+            TextField tf = new TextField(code);
+            tf.setEditable(false);
+            tf.setPrefWidth(260);
+            tf.setStyle("-fx-background-color: #1a0d00; -fx-text-fill: #FACC15;"
+                    + " -fx-font-family: Consolas; -fx-font-weight: bold;"
+                    + " -fx-border-color: #FACC1566; -fx-border-radius: 8; -fx-background-radius: 8;");
+            Button copy = new Button("Copy code");
+            copy.getStyleClass().add("ghost-button");
+            copy.setOnAction(e -> {
+                javafx.scene.input.ClipboardContent cc = new javafx.scene.input.ClipboardContent();
+                cc.putString(code);
+                javafx.scene.input.Clipboard.getSystemClipboard().setContent(cc);
+                copy.setText("Copied! ✓");
+                javafx.animation.PauseTransition pt =
+                        new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
+                pt.setOnFinished(ev -> copy.setText("Copy code"));
+                pt.play();
+            });
+            Label codeHint = FxUi.muted("Paste this in Discord with /redeem-vip to receive the 👑 Supernova role.");
+            codeHint.setWrapText(true);
+            action = new VBox(8, new HBox(8, tf, copy), codeHint);
+        } else {
+            long balance = wallet.balance();
+            boolean canAfford = balance >= com.luminamc.shop.VipManager.PRICE;
+            Button buy = new Button(canAfford
+                    ? "Buy VIP  ·  ✦ " + fmt(com.luminamc.shop.VipManager.PRICE)
+                    : "Need " + fmt(com.luminamc.shop.VipManager.PRICE - balance) + " more ✦");
+            buy.getStyleClass().add("accent-button");
+            buy.setMaxWidth(Double.MAX_VALUE);
+            buy.setDisable(!canAfford);
+            if (canAfford) {
+                FxUi.hoverPop(buy);
+                buy.setOnAction(e -> {
+                    String newCode = com.luminamc.shop.VipManager.purchase(ctx.config);
+                    if (newCode != null) rebuild();
+                });
+            }
+            action = buy;
+        }
+
+        VBox card = new VBox(10, head, desc, perks, priceLabel, action);
+        card.setPadding(new Insets(18, 20, 18, 20));
+        card.setStyle("-fx-background-color: linear-gradient(to bottom right, #1a0d00, #2d1a00, #1a0d00);"
+                + " -fx-background-radius: 16;"
+                + " -fx-border-color: #FACC1599; -fx-border-width: 1.5; -fx-border-radius: 16;");
+        DropShadow glow = new DropShadow(20, Color.web("#FACC15"));
+        glow.setSpread(0.01);
+        card.setEffect(glow);
+        return card;
     }
 
     // ── cosmetics ───────────────────────────────────────────────────────────
