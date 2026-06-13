@@ -75,22 +75,20 @@ public final class FabricMeta {
             }
         }
 
-        // Fabric profiles may add extra JVM/game args.
+        // Fabric profiles may add extra JVM/game args (rule-gated objects included).
         if (profile.has("arguments")) {
             JsonObject args = profile.getAsJsonObject("arguments");
-            appendStrings(args.getAsJsonArray("jvm"), rv.jvmArgs);
-            appendStrings(args.getAsJsonArray("game"), rv.gameArgs);
+            MojangMeta.collectArgs(args.has("jvm") ? args.getAsJsonArray("jvm") : null, rv.jvmArgs);
+            MojangMeta.collectArgs(args.has("game") ? args.getAsJsonArray("game") : null, rv.gameArgs);
         }
-    }
-
-    private static void appendStrings(JsonArray arr, List<String> out) {
-        if (arr == null) return;
-        for (JsonElement el : arr) if (el.isJsonPrimitive()) out.add(el.getAsString());
     }
 
     /** Converts a Maven coordinate {@code group:artifact:version[:classifier]} to a repo path. */
     public static String mavenPath(String coord) {
         String[] parts = coord.split(":");
+        if (parts.length < 3) {
+            throw new IllegalArgumentException("Malformed Maven coordinate (need group:artifact:version): " + coord);
+        }
         String group = parts[0].replace('.', '/');
         String artifact = parts[1];
         String version = parts[2];

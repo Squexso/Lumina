@@ -120,7 +120,23 @@ public final class LaunchService {
                     fx(cb, c -> c.progress(fraction, detail));
                 }
             };
-            String initialJava = ctx.resolveJavaExe(inst);
+            // The Forge/NeoForge installer (run inside installer.resolve) and the old game
+            // both need Java 8 on legacy Minecraft (≤ 1.16). Provision it up front so the
+            // installer never runs on a too-new JDK; modern versions keep the detected JDK.
+            String initialJava;
+            boolean legacyModded = inst.loader != com.luminamc.instance.ModLoader.VANILLA
+                    && com.luminamc.javart.JavaDetector.requiredMajor(inst.mcVersion) <= 8;
+            if (legacyModded) {
+                fx(cb, c -> c.phase("Preparing Java 8 for the " + inst.loader.displayName + " installer…"));
+                try {
+                    initialJava = new com.luminamc.javart.JreProvisioner()
+                            .ensureJava(8, msg -> fx(cb, c -> c.phase(msg))).toString();
+                } catch (Exception e) {
+                    initialJava = ctx.resolveJavaExe(inst);   // best-effort; install may still work
+                }
+            } else {
+                initialJava = ctx.resolveJavaExe(inst);
+            }
             ResolvedVersion rv = installer.resolve(inst, entry, initialJava, listener);
 
             // Old Minecraft (≤ 1.16 / LegacyLauncher) runs ONLY on Java 8 — a newer JDK

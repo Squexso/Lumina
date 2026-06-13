@@ -48,7 +48,12 @@ public final class MojangMeta {
 
     // ── client jar ──────────────────────────────────────────────────────
 
-    private void parseClient(JsonObject json, ResolvedVersion rv) {
+    private void parseClient(JsonObject json, ResolvedVersion rv) throws IOException {
+        if (!json.has("downloads") || !json.getAsJsonObject("downloads").has("client")) {
+            throw new IOException("Version JSON for " + rv.id + " has no client download — it looks "
+                    + "like a loader profile (inheritsFrom), not a full version. Resolve the vanilla "
+                    + "version first, then merge the loader.");
+        }
         JsonObject client = json.getAsJsonObject("downloads").getAsJsonObject("client");
         Path jar = LuminaPaths.versions().resolve(rv.id).resolve(rv.id + ".jar");
         rv.clientJar = jar;
@@ -69,17 +74,19 @@ public final class MojangMeta {
             JsonObject downloads = lib.has("downloads") ? lib.getAsJsonObject("downloads") : null;
             if (downloads == null) continue;
 
-            // Main artifact (current versions ship per-OS natives this way too).
+            // Main artifact. Modern LWJGL3 ships per-OS natives as their own library
+            // entries (name like "org.lwjgl:lwjgl:3.3.3:natives-windows"); those go ONLY
+            // to the natives list for extraction, never the classpath (a natives jar holds
+            // just .dll/.so and would pollute the classpath).
             if (downloads.has("artifact")) {
                 JsonObject art = downloads.getAsJsonObject("artifact");
                 Path dest = LuminaPaths.libraries().resolve(str(art, "path"));
-                rv.classpath.add(dest);
+                String name = str(lib, "name");
+                boolean isNative = name != null && name.toLowerCase(Locale.ROOT).contains("natives");
+                if (isNative) rv.nativeJars.add(dest);
+                else rv.classpath.add(dest);
                 rv.downloads.add(new DownloadTask(str(art, "url"), dest, str(art, "sha1"),
                         longOr(art, "size", 0), str(art, "path")));
-                String name = str(lib, "name");
-                if (name != null && name.toLowerCase(Locale.ROOT).contains("natives")) {
-                    rv.nativeJars.add(dest);
-                }
             }
 
             // Legacy native classifiers (e.g. lwjgl natives-windows).
@@ -145,7 +152,12 @@ public final class MojangMeta {
         }
     }
 
-    private void collectArgs(JsonArray arr, java.util.List<String> out) {
+    /**
+     * Appends argument tokens, honoring Mojang's rule-gated object form. Shared by
+     * the loader meta parsers (Fabric/Forge/NeoForge) so they don't silently drop
+     * conditional {@code {rules, value}} arguments (module-path switches etc.).
+     */
+    public static void collectArgs(JsonArray arr, java.util.List<String> out) {
         if (arr == null) return;
         for (JsonElement el : arr) {
             if (el.isJsonPrimitive()) {
@@ -154,6 +166,7 @@ public final class MojangMeta {
                 JsonObject o = el.getAsJsonObject();
                 if (o.has("rules") && !rulesAllow(o.getAsJsonArray("rules"))) continue;
                 JsonElement val = o.get("value");
+                if (val == null) continue;
                 if (val.isJsonPrimitive()) {
                     out.add(val.getAsString());
                 } else if (val.isJsonArray()) {

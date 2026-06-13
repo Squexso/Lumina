@@ -27,7 +27,10 @@ public final class ArgumentBuilder {
         put("version_name", rv.id);
         put("game_directory", gameDir.toString());
         put("assets_root", rv.assetsRoot != null ? rv.assetsRoot.toString() : "");
-        put("game_assets", rv.assetsRoot != null ? rv.assetsRoot.resolve("virtual").resolve("legacy").toString() : "");
+        // Old (pre-1.7.4) versions read loose asset files from this virtual dir, which the
+        // installer materializes per asset-index id (e.g. "legacy", "pre-1.6").
+        put("game_assets", rv.assetsRoot != null && rv.assetIndexId != null
+                ? rv.assetsRoot.resolve("virtual").resolve(rv.assetIndexId).toString() : "");
         put("assets_index_name", rv.assetIndexId != null ? rv.assetIndexId : "");
         put("auth_uuid", account != null ? account.mcUuid : "0");
         put("auth_access_token", account != null ? account.mcAccessToken : "0");

@@ -68,13 +68,22 @@ public final class ForgeLikeMeta {
         return out;
     }
 
-    /** Maps a Minecraft version like {@code 1.21.10} to the NeoForge prefix {@code 21.10.}. */
+    /**
+     * Maps a Minecraft version to the NeoForge build prefix. Classic scheme
+     * {@code 1.21.10} → {@code 21.10.}; next-gen {@code 26.1.2} → {@code 26.1.}.
+     * Returns a non-null prefix for any parseable version so the UI filter and the
+     * mismatch guard stay consistent (a null prefix would disable both).
+     */
     private static String neoforgePrefix(String mcVersion) {
+        if (mcVersion == null) return null;
         String[] p = mcVersion.split("\\.");
-        if (p.length < 2 || !p[0].equals("1")) return null;
-        String minor = p[1];
-        String patch = p.length >= 3 ? p[2] : "0";
-        return minor + "." + patch + ".";
+        if (p.length < 2) return null;
+        if (p[0].equals("1")) {
+            String patch = p.length >= 3 ? p[2] : "0";
+            return p[1] + "." + patch + ".";
+        }
+        // Next-gen line (e.g. 26.x): NeoForge would mirror the major.minor.
+        return p[0] + "." + p[1] + ".";
     }
 
     private String installerUrl(ModLoader loader, String mcVersion, String loaderVersion) {
@@ -190,6 +199,13 @@ public final class ForgeLikeMeta {
 
         if (o.has("mainClass")) rv.mainClass = o.get("mainClass").getAsString();
 
+        // Modern Forge/NeoForge profiles declare their own minimum Java (e.g. 1.17+ → 17,
+        // 1.20.5+ → 21). Honor it so we launch (and provision) the right JDK.
+        if (o.has("javaVersion") && o.getAsJsonObject("javaVersion").has("majorVersion")) {
+            int loaderMajor = o.getAsJsonObject("javaVersion").get("majorVersion").getAsInt();
+            if (loaderMajor > rv.javaMajor) rv.javaMajor = loaderMajor;
+        }
+
         // Forge/NeoForge libraries (and the installer's locally-patched jars) live
         // under the instance's own libraries dir, where the installer placed them.
         Path base = gameDir.resolve("libraries");
@@ -222,16 +238,22 @@ public final class ForgeLikeMeta {
             }
         }
 
-        if (o.has("arguments")) {
+        if (o.has("minecraftArguments")) {
+            // Legacy Forge (≤ 1.12.2): the child's minecraftArguments REPLACES the parent's
+            // — it already contains the full vanilla args PLUS Forge's --tweakClass, which is
+            // what actually bootstraps Forge under launchwrapper. Without this, old Forge
+            // launches as plain vanilla (or crashes); appending would duplicate vanilla args.
+            rv.gameArgs.clear();
+            for (String tok : o.get("minecraftArguments").getAsString().split(" ")) {
+                if (!tok.isBlank()) rv.gameArgs.add(tok);
+            }
+        } else if (o.has("arguments")) {
+            // Modern Forge/NeoForge (1.13+): arguments ADD to vanilla's (module path,
+            // --launchTarget, fml.* markers). Rule-gated entries are honored.
             JsonObject args = o.getAsJsonObject("arguments");
-            appendStrings(args.has("jvm") ? args.getAsJsonArray("jvm") : null, rv.jvmArgs);
-            appendStrings(args.has("game") ? args.getAsJsonArray("game") : null, rv.gameArgs);
+            MojangMeta.collectArgs(args.has("jvm") ? args.getAsJsonArray("jvm") : null, rv.jvmArgs);
+            MojangMeta.collectArgs(args.has("game") ? args.getAsJsonArray("game") : null, rv.gameArgs);
         }
-    }
-
-    private static void appendStrings(JsonArray arr, List<String> out) {
-        if (arr == null) return;
-        for (JsonElement el : arr) if (el.isJsonPrimitive()) out.add(el.getAsString());
     }
 
     private static String optStr(JsonObject o, String key) {
