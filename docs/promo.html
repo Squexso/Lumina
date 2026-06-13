@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LuminaMC — Promo</title>
+<!--
+  Record-ready vertical (9:16) promo loop for TikTok / YouTube Shorts / Reels.
+  HOW TO RECORD:
+   1. Open this file in Chrome, press F11 (fullscreen).
+   2. Record the centred 9:16 card with OBS (or Xbox Game Bar: Win+Alt+R) at 1080x1920.
+   3. ~30s loop — capture one full cycle. Add music in the editor (see suggestions below).
+  Everything is self-contained (no internet needed).
+-->
+<style>
+  :root{
+    --violet:#8B5CF6; --violet-deep:#5B21B6; --cyan:#67E8F9; --pink:#EC4899;
+    --bg:#0B0712; --text:#ECE7F7; --muted:#A99FC4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#05030a;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+  /* The 9:16 recording stage, centred on any screen. */
+  .stage{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:min(420px,42vh);height:min(746px,92vh);aspect-ratio:9/16;
+    border-radius:26px;overflow:hidden;color:var(--text);
+    background:radial-gradient(120% 80% at 50% -10%,#1A0F33 0%,var(--bg) 55%,#05030a 100%);
+    box-shadow:0 30px 90px rgba(124,58,237,.35),0 0 0 1px rgba(167,139,250,.18);
+  }
+  canvas{position:absolute;inset:0;width:100%;height:100%}
+  .scenes{position:absolute;inset:0}
+  .scene{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:0 34px;gap:14px;opacity:0;transform:translateY(22px) scale(.98);
+    transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);
+  }
+  .scene.active{opacity:1;transform:translateY(0) scale(1)}
+  .kicker{font-size:12px;letter-spacing:4px;text-transform:uppercase;color:var(--cyan);font-weight:700}
+  .big{font-size:34px;font-weight:800;line-height:1.12}
+  .sub{font-size:15px;color:var(--muted);line-height:1.5;max-width:300px}
+  .grad{background:linear-gradient(90deg,var(--violet),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* Scene 1 — logo */
+  .logo{font-size:62px;font-weight:900;letter-spacing:7px;
+    background:linear-gradient(90deg,var(--violet),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 34px rgba(139,92,246,.55))}
+  .tag{font-size:12px;letter-spacing:6px;color:var(--muted);text-transform:uppercase}
+
+  /* loader chips */
+  .chips{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;max-width:300px}
+  .chip{padding:9px 15px;border-radius:99px;font-size:13px;font-weight:700;
+    background:rgba(124,58,237,.16);border:1px solid rgba(167,139,250,.4);color:#E6DEFb}
+  .chip.v{border-color:#86efac;color:#bbf7d0}
+  .chip.f{border-color:#7dd3fc;color:#bae6fd}
+  .chip.g{border-color:#fca5a5;color:#fecaca}
+  .chip.n{border-color:#fcd34d;color:#fde68a}
+
+  /* feature icon */
+  .ico{font-size:54px;filter:drop-shadow(0 6px 24px rgba(124,58,237,.5))}
+
+  /* cape mock */
+  .cape{width:120px;height:175px;border-radius:14px;position:relative;overflow:hidden;
+    border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 40px rgba(124,58,237,.5)}
+  .cape .fab{position:absolute;inset:0;background:linear-gradient(160deg,#C4B5FD,#5B21B6 55%,#2E1065)}
+  .cape .crys{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) rotate(8deg);
+    width:34px;height:54px;background:linear-gradient(160deg,#DDD6FE,#7C3AED);
+    clip-path:polygon(50% 0,100% 34%,78% 100%,22% 100%,0 34%);filter:drop-shadow(0 0 12px #c4b5fd)}
+  .capes{display:flex;gap:12px}
+  .cape.c2 .fab{background:linear-gradient(160deg,#6EE7B7,#047857)}
+  .cape.c3 .fab{background:linear-gradient(160deg,#FDE68A,#B91C1C)}
+  .cape.small{width:78px;height:114px}
+
+  /* CTA */
+  .cta-btn{margin-top:6px;padding:15px 30px;border-radius:14px;font-size:18px;font-weight:800;color:#fff;
+    background:linear-gradient(90deg,var(--violet),var(--violet-deep));box-shadow:0 12px 34px rgba(139,92,246,.6);
+    animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .links{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);margin-top:8px}
+  .links b{color:#E6DEFb}
+  .free{display:inline-block;margin-top:4px;font-size:12px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;font-weight:700}
+
+  /* progress dots */
+  .dots{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:5}
+  .dot{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.22);transition:all .4s}
+  .dot.on{background:linear-gradient(90deg,var(--violet),var(--cyan));width:20px}
+
+  .hint{position:absolute;bottom:14px;left:14px;color:#3a335a;font-size:10px;font-family:monospace;z-index:9}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="sky"></canvas>
+    <div class="scenes">
+      <!-- 1 -->
+      <section class="scene" data-i="0">
+        <div class="logo">LUMINA</div>
+        <div class="tag">Minecraft Launcher</div>
+        <div class="sub" style="margin-top:10px">The all-in-one launcher that just works.</div>
+      </section>
+      <!-- 2 -->
+      <section class="scene" data-i="1">
+        <div class="kicker">Every loader · any version</div>
+        <div class="big">One click.<br><span class="grad">Ready to play.</span></div>
+        <div class="chips">
+          <div class="chip v">Vanilla</div><div class="chip f">Fabric</div>
+          <div class="chip g">Forge</div><div class="chip n">NeoForge</div>
+        </div>
+        <div class="sub">1.7 → 1.21 &amp; beyond — Java bundled, zero setup.</div>
+      </section>
+      <!-- 3 -->
+      <section class="scene" data-i="2">
+        <div class="ico">🔎</div>
+        <div class="big">Mods &amp; shaders,<br><span class="grad">one click</span></div>
+        <div class="sub">Browse and install straight from Modrinth — no folders, no hassle.</div>
+      </section>
+      <!-- 4 -->
+      <section class="scene" data-i="3">
+        <div class="kicker">Cosmetics</div>
+        <div class="big">Earn &amp; wear <span class="grad">capes</span></div>
+        <div class="capes">
+          <div class="cape c2 small"><div class="fab"></div><div class="crys"></div></div>
+          <div class="cape"><div class="fab"></div><div class="crys"></div></div>
+          <div class="cape c3 small"><div class="fab"></div><div class="crys"></div></div>
+        </div>
+        <div class="sub">A full cosmetics shop — earn tokens just by playing.</div>
+      </section>
+      <!-- 5 -->
+      <section class="scene" data-i="4">
+        <div class="ico">🎯</div>
+        <div class="big">Built-in <span class="grad">HUD client</span></div>
+        <div class="sub">FPS, coords, keystrokes &amp; more — open it in-game with Right-Shift.</div>
+      </section>
+      <!-- 6 -->
+      <section class="scene" data-i="5">
+        <div class="logo" style="font-size:46px">LUMINA</div>
+        <div class="free">Free · Windows</div>
+        <div class="cta-btn">⬇ Download now</div>
+        <div class="links">
+          <span><b>github.com/Squexso/Lumina</b></span>
+          <span>💬 discord.gg/E7qYYCJwSh</span>
+        </div>
+      </section>
+    </div>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="hint">record this card · 1080×1920</div>
+  </div>
+
+<script>
+  // ── starfield: twinkle + drift + occasional shooting star ──
+  const cv = document.getElementById('sky'), g = cv.getContext('2d');
+  let W, H, stars = [], meteors = [], t = 0;
+  function size(){ const r = cv.getBoundingClientRect(); W = cv.width = r.width*2; H = cv.height = r.height*2; build(); }
+  function build(){
+    stars = [];
+    const n = Math.round(W*H/9000);
+    for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+.5,
+      base:.3+Math.random()*.6,ph:Math.random()*6.28,sp:.6+Math.random()*1.4,
+      tint:['#FFFFFF','#C4B5FD','#A5F3FC'][Math.floor(Math.random()*3)]});
+  }
+  let last=0;
+  function frame(ts){
+    const dt = last? Math.min(.05,(ts-last)/1000):0; last=ts; t+=dt;
+    g.clearRect(0,0,W,H);
+    for(const s of stars){
+      const tw = .72+.28*Math.sin(s.ph+t*s.sp), a=s.base*tw;
+      if(s.r>1.6){ g.fillStyle=hex(s.tint,a*.22); g.beginPath(); g.arc(s.x,s.y,s.r*2.6,0,6.28); g.fill(); }
+      g.fillStyle=hex(s.tint,a); g.beginPath(); g.arc(s.x,s.y,s.r,0,6.28); g.fill();
+    }
+    if(Math.random()<dt*.5) meteors.push({x:Math.random()*W,y:-20,vx:(-3-Math.random()*3)*60,vy:(4+Math.random()*3)*60,life:0});
+    for(const m of meteors){ m.life+=dt; m.x+=m.vx*dt; m.y+=m.vy*dt;
+      const len=70; const ang=Math.atan2(m.vy,m.vx);
+      const grad=g.createLinearGradient(m.x,m.y,m.x-Math.cos(ang)*len,m.y-Math.sin(ang)*len);
+      grad.addColorStop(0,'rgba(255,255,255,.9)'); grad.addColorStop(1,'rgba(196,181,253,0)');
+      g.strokeStyle=grad; g.lineWidth=2.4; g.beginPath(); g.moveTo(m.x,m.y);
+      g.lineTo(m.x-Math.cos(ang)*len,m.y-Math.sin(ang)*len); g.stroke();
+    }
+    meteors = meteors.filter(m=>m.y<H+40 && m.life<3);
+    requestAnimationFrame(frame);
+  }
+  function hex(c,a){ const n=parseInt(c.slice(1),16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+  window.addEventListener('resize',size); size(); requestAnimationFrame(frame);
+
+  // ── scene timeline (~30s loop) ──
+  const scenes=[...document.querySelectorAll('.scene')], dots=[...document.querySelectorAll('.dot')];
+  const SCHED=[ [0,5000],[5000,10500],[10500,15000],[15000,20000],[20000,25000],[25000,30000] ];
+  const LOOP=30000;
+  function tick(){
+    const now = performance.now() % LOOP;
+    let cur=0; for(let i=0;i<SCHED.length;i++){ if(now>=SCHED[i][0] && now<SCHED[i][1]){ cur=i; break; } }
+    scenes.forEach((s,i)=>s.classList.toggle('active',i===cur));
+    dots.forEach((d,i)=>d.classList.toggle('on',i===cur));
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>
