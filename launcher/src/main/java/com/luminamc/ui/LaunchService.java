@@ -98,8 +98,9 @@ public final class LaunchService {
                 new com.luminamc.game.PerformanceModInstaller().ensure(inst, msg -> fx(cb, c -> c.log(msg)));
             }
 
-            // 3d. Dynamic lights — real, smooth lighting via LambDynamicLights (Fabric).
-            if (inst.loader == com.luminamc.instance.ModLoader.FABRIC) {
+            // 3d. Dynamic lights — only when the performance-mod feature is on, only on Fabric.
+            if (inst.loader == com.luminamc.instance.ModLoader.FABRIC
+                    && inst.features != null && inst.features.performanceMod) {
                 fx(cb, c -> c.phase("Checking dynamic lights…"));
                 new com.luminamc.game.ModrinthModInstaller().ensure(inst,
                         "lambdynamiclights", "lambdynamiclights", "LambDynamicLights",

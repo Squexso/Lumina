@@ -40,7 +40,7 @@ public final class PerformanceModInstaller {
 
     /** Known performance-mod jar name fragments — to detect an existing install. */
     private static final String[] KNOWN =
-            {"vulkanmod", "sodium", "embeddium", "rubidium", "foamfix", "vanillafix", "optifine"};
+            {"vulkanmod", "lithium", "sodium", "embeddium", "rubidium", "foamfix", "vanillafix", "optifine"};
 
     public void ensure(Instance inst, Consumer<String> log) {
         if (inst.loader == ModLoader.VANILLA) {
